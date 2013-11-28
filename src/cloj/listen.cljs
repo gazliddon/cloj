@@ -3,16 +3,16 @@
 (ns gaz.listen
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require 
-            [goog.events :as events]
-            [cljs.core.async :as ca]))
+    [goog.events :as events]
+    [cljs.core.async :as ca]))
 
 (defn listen
   "Create a channel to listen for an event
-   on an element"
+  on an element"
   [el type]
   (let [outchan (ca/chan)]
     (events/listen el type
-      (fn [e] (ca/put! outchan e)))
+                   (fn [e] (ca/put! outchan e)))
     outchan))
 
 (defn merge-listen [el events]
@@ -26,9 +26,9 @@
   [el] (ca/merge [(listen el "keydown") (listen el "keyup")])) 
 
 (defn on-keys
-  "Call this function every time a keyup / keydown message is received for this element"
-  [e f]
-  (let [ kud (listen/listen-keys scr)]
+  "call func f for every key event on element e"
+  [e f ]
+  (let [ kud (listen-keys e)]
     (go (while true
           (let [ k (ca/<! kud)]
             (f k))))))

@@ -62,8 +62,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Planes and interesections
 
-
-
 ;; Rays
 (defrecord Ray [pos dir])
 (defn ray ^Ray [pos dir]
@@ -92,4 +90,12 @@
 (defn ray-intersection-with-plane [ray plane]
   (let [{:keys [pos dir]} ray]
     (sub pos (mul-scalar (ray-distance-to-plane ray plane) dir ))))
+
+
+
+
+
+
+
+
 

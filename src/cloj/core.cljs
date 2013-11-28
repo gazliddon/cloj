@@ -14,6 +14,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- logit [x](. js/console (log x)))
+
 (def scr (dom/getElement "scr"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -37,16 +38,13 @@
           (f v)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn mmove-to-drag [a b]
-  #{:dx 0 :dy 0 :x 0 :y 0})
 
-(defn mk-mouse-chan []
-  (ca/map<
-    ()
-    ()))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def mk-cube-from-tile (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
+(defn mk-world-geom! [] (world/iterate-world mk-cube-from-tile world/world-map) )
+
+;; Pipe keys through to control and get a velocity vector
 (defn got-key! [e]
   (let [etype  (.-type e)
         keyfun (partial gkeys/new-state! (char (.-keyCode e)))
@@ -55,11 +53,6 @@
       "keydown"   (keyfun true)
       "keyup"     (keyfun false)
       "focuslost" (reset))))
-
-(def mk-cube-from-tile (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
-(defn mk-world-geom! [] (world/iterate-world mk-cube-from-tile world/world-map) )
-
-;; Pipe keys through to control and get a velocity vector
 
 (defn keys-to-vel
   "return a new velocity adjusted by the controls"  
@@ -73,8 +66,8 @@
 (defn cam-func!
   "update the camera from the keys!"
   [^C/Cam cam]
-  (let [nv ( keys-to-vel (:vel cam) (gkeys/filter-keys :state))]
-    (assoc cam :pos (math/add ( :pos cam) nv) :vel nv)))
+  (comment let [nv ( keys-to-vel (:vel cam) (gkeys/filter-keys :state))]
+    (assoc cam :pos (math/add (:pos cam) nv) :vel nv)) cam)
 
 (defn every-frame! [] (swap! three/cam cam-func!))
 
@@ -90,32 +83,3 @@
   (listen/on-keys scr got-key!)
   (do-time-stuff (fn [v] (logit (str v))))
   (mk-world-geom!))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; World map stuff
-(defn- get-wh [mp] [(count mp) (reduce #(max %1 (count %2)) 0 mp)])
-
-(def world-map-txt
-  ["*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************"
-   "*******************" ])
-
-(def world-map #{:dims (get-wh world-map-txt)
-                 :text world-map-txt})
-
-(defn create-entity [id & compf]
-  #{:id id :components compf :todelete false})
-
-(defn create-comp [tp updatef deletef]
-  #{:type tp :update updatef :delete deletef})
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ends
-
