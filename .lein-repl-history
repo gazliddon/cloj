@@ -198,3 +198,8 @@ floor-plane
 (tester)
 (tester2)
 (tester)
+(ns test.math)
+(use gaz.tes-math)
+(use gaz.test-math)
+(require 'gaz.test-math)
+(use 'gaz.test-math)

@@ -15,3 +15,13 @@
   "add a sequence of same sized sequences together"
   [xs](reduce #(combine + %1 %2) xs))
 
+(defn map-kv 
+  "map f over each key val in map"
+  [f hm] (map #(f % (hm %)) (keys hm)))
+
+(defn update-map 
+  "Update map m1 with new key/vals from map m2"
+  [m1 m2]
+  (let [new-kv (map-kv #(list %1 %2) m2)]
+    (reduce #(assoc %1 (first %2) (second %2)) m1 new-kv)))
+

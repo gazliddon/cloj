@@ -1,12 +1,28 @@
-(ns gaz.math)
+(ns gaz.math
+  (:require [gaz.util :as util]))
 
+(defn- default-abs [v]
+  (if (< v 0)
+    (- 0 v)
+    v))
 
-(def mathfuncs (atom {}))
+(defn- default-sqrt [v]
+   0)
 
-(defn init! [mth] (swap! mathfuncs mth))
+(def math-atom (atom { :abs  default-abs
+                       :sqrt default-sqrt }))
 
-(defn abs [v] ((:abs @mathfuncs) v))
-(defn sqrt [v] ((:sqrt @mathfuncs) v))
+(defn init!
+  "Initialise math module with defs for routines needed
+   Works with cljs and clj where abs / sqrt and a few
+   other things aren't the same"
+  
+  [mth] (do 
+          (swap! math-atom util/update-map mth)
+          @math-atom))
+
+(defn abs [v] ( (:abs @math-atom) v))
+(defn sqrt [v] ( (:sqrt @math-atom) v))
 
 (defrecord Vec3 [^double x ^double y ^double z])
 
@@ -91,11 +107,6 @@
   (let [{:keys [pos dir]} ray]
     (sub pos (mul-scalar (ray-distance-to-plane ray plane) dir ))))
 
-
-
-
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ends
 

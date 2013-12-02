@@ -9,7 +9,8 @@
 (def max-vel (math/vec3 1 1 1 ))
 (def min-vel (math/neg max-vel))
 
-(defn clamp-vel [v-in] (math/clamp v-in min-vel max-vel))
+(defn clamp-vel [v-in]
+  (math/clamp v-in min-vel max-vel))
 
 (def key-to-symbol {\W :up
                     \A :left
