@@ -55,21 +55,20 @@
 (defn my-keys-to-vel
   "Return a new velocity adjusted by the controls"
   [curr-vel curr-keys]
-  (->> curr-keys
-       (control/keys-to-vel)
-       (math/add curr-vel)
-       (control/clamp-vel)
-       (math/mul-scalar 0.95)))
+  (do 
+    (->> curr-keys
+      (control/keys-to-vel)
+      (math/add curr-vel)
+      (control/clamp-vel)
+      (math/mul-scalar 0.95))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn cam-func!
+(defn cam-func
   "update the camera from the keys!"
   [^C/Cam cam]
   (let [nv (my-keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
-    (assoc cam :pos (math/add (:pos cam) nv) :vel nv)) cam)
-
-(defn every-frame! [] (swap! three/cam cam-func!))
+    (assoc cam :pos (math/add (:pos cam) nv) :vel nv)))
 
 (def cljs-math { :abs  Math/abs
                  :sqrt Math/sqrt })
@@ -80,7 +79,7 @@
 (do
   (math/init! cljs-math)
   (logit "Here we go")
-  (three/init every-frame!)
+  (three/init cam-func)
   (listen/on-keys scr got-key!)
   (do-time-stuff (fn [v] (comment logit (str v))))
   (mk-world-geom!))

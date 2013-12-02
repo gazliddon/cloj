@@ -37,7 +37,7 @@
 
 (defn render[f]
             (js/requestAnimationFrame #(render f))
-            (f)
+            (swap! cam f)
             (set! (.-position camera) (mk-vec (:pos @cam)))
             (set! (.-lookat camera) (mk-vec (:lookat @cam)))
             (set! (.-x (.-rotation cube))  (+ 0.01 (.-x (.-rotation cube))) )
