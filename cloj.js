@@ -3,7 +3,6 @@ goog.addDependency("../cljs/core.js", ['cljs.core'], ['goog.string', 'goog.array
 goog.addDependency("../gaz/util.js", ['gaz.util'], ['cljs.core']);
 goog.addDependency("../gaz/math.js", ['gaz.math'], ['cljs.core', 'gaz.util']);
 goog.addDependency("../gaz/control.js", ['gaz.control'], ['cljs.core', 'gaz.math', 'gaz.util']);
-goog.addDependency("../gaz/cam.js", ['gaz.cam'], ['cljs.core', 'gaz.math']);
 goog.addDependency("../cljs/core/async/impl/protocols.js", ['cljs.core.async.impl.protocols'], ['cljs.core']);
 goog.addDependency("../cljs/core/async/impl/ioc_helpers.js", ['cljs.core.async.impl.ioc_helpers'], ['cljs.core', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async/impl/buffers.js", ['cljs.core.async.impl.buffers'], ['cljs.core', 'cljs.core.async.impl.protocols']);
@@ -11,8 +10,12 @@ goog.addDependency("../cljs/core/async/impl/dispatch.js", ['cljs.core.async.impl
 goog.addDependency("../cljs/core/async/impl/channels.js", ['cljs.core.async.impl.channels'], ['cljs.core.async.impl.buffers', 'cljs.core', 'cljs.core.async.impl.dispatch', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async/impl/timers.js", ['cljs.core.async.impl.timers'], ['cljs.core', 'cljs.core.async.impl.channels', 'cljs.core.async.impl.dispatch', 'cljs.core.async.impl.protocols']);
 goog.addDependency("../cljs/core/async.js", ['cljs.core.async'], ['cljs.core.async.impl.ioc_helpers', 'cljs.core.async.impl.buffers', 'cljs.core', 'cljs.core.async.impl.channels', 'cljs.core.async.impl.dispatch', 'cljs.core.async.impl.protocols', 'cljs.core.async.impl.timers']);
+goog.addDependency("../gaz/mouse.js", ['gaz.mouse'], ['cljs.core', 'cljs.core.async']);
+goog.addDependency("../gaz/keys.js", ['gaz.keys'], ['cljs.core', 'cljs.core.async', 'gaz.util']);
+goog.addDependency("../gaz/frame.js", ['gaz.frame'], ['cljs.core', 'cljs.core.async', 'gaz.util']);
+goog.addDependency("../gaz/system.js", ['gaz.system'], ['cljs.core', 'gaz.mouse', 'gaz.keys', 'gaz.frame', 'cljs.core.async']);
+goog.addDependency("../gaz/cam.js", ['gaz.cam'], ['cljs.core', 'gaz.math']);
 goog.addDependency("../gaz/listen.js", ['gaz.listen'], ['cljs.core', 'cljs.core.async', 'goog.events']);
-goog.addDependency("../gaz/keys.js", ['gaz.keys'], ['cljs.core']);
 goog.addDependency("../gaz/three.js", ['gaz.three'], ['cljs.core', 'gaz.cam', 'gaz.math']);
 goog.addDependency("../gaz/world.js", ['gaz.world'], ['cljs.core', 'gaz.math']);
-goog.addDependency("../cloj/core.js", ['cloj.core'], ['gaz.control', 'cljs.core', 'gaz.cam', 'goog.dom', 'gaz.listen', 'gaz.keys', 'gaz.three', 'gaz.math', 'cljs.core.async', 'goog.events', 'gaz.world']);
+goog.addDependency("../cloj/core.js", ['cloj.core'], ['gaz.control', 'cljs.core', 'gaz.system', 'gaz.cam', 'goog.dom', 'gaz.listen', 'gaz.keys', 'gaz.three', 'gaz.math', 'cljs.core.async', 'goog.events', 'gaz.world']);

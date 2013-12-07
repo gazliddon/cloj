@@ -1,4 +1,8 @@
-(ns gaz.keys)
+(ns gaz.keys
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require
+    [gaz.util :as util]
+    [cljs.core.async :as ca]))
 
 (def keytab (atom {}))
 

@@ -29,11 +29,23 @@
 
 (def key-to-vel (comp symbol-to-vel key-to-symbol))
 
-(defn keys-to-vel
+(defn- keypresses-to-vel
   "Turn a list of key press values into a final velocity"
   [xs]
   (->> xs
     (map key-to-vel)
     (util/filter-out-nil)
     (reduce math/add math/zero)))
+
+
+;; Pipe keys through to control and get a velocity vector
+(defn keys-to-vel
+  "Return a new velocity adjusted by the controls"
+  [curr-vel curr-keys]
+  (do 
+    (->> curr-keys
+      (keypresses-to-vel)
+      (math/add curr-vel)
+      (clamp-vel)
+      (math/mul-scalar 0.95))))
 
