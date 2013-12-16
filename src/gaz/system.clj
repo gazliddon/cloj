@@ -21,9 +21,9 @@
                 error])
 
 (def sys-atom (atom (Sys.
-                      (mk-a-chan gkeys/mk-chan) 
-                      (mk-a-chan mouse/mk-chan)
-                      (mk-a-chan frame/mk-chan)
+                      nil
+                      nil
+                      nil
                       def-math
                       def-error)))
 

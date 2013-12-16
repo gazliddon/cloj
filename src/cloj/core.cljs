@@ -6,6 +6,7 @@
             [goog.events :as events]
             [cljs.core.async :as ca]
             [gaz.system :as sys]
+            [cloj.jsutil :as jsu]
             [gaz.world :as world]
             [gaz.listen :as listen]
             [gaz.three :as three]
@@ -15,9 +16,25 @@
             [gaz.control :as control]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn- logit [x](. js/console (log x)))
+(defn func-on-vals [mp func kyz]
+  (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
+
+(def get-text (comp #(.-textContent %) dom/getElement))
+
+(defn get-source [shad]
+  (func-on-vals shad get-text [:vertexShader :fragmentShader]))
+
+
+
 (def scr (dom/getElement "scr"))
 
+(def shader-def { :vertexShader    "vertexShader"
+                  :fragmentShader  "fragment_shader_screen"
+                  :uniforms        {:time { :type "f" :value 0.0 } }})
+
+(def test-shader (get-source shader-def))
+
+(jsu/log test-shader)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
 (defn- req-anim-frame [outchan]
@@ -43,10 +60,11 @@
 (def mk-cube-from-tile (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
 (defn mk-world-geom! [] (world/iterate-world mk-cube-from-tile world/world-map) )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Take an action on a key
 ;; Should really just xform it into a platform neutral message and send on
+
 (defn got-key! [e]
   (let [etype  (.-type e)
         keyfun (partial gkeys/new-state! (char (.-keyCode e)))
@@ -81,13 +99,19 @@
 ;; start the app
 
 (def cljs-math { :abs  Math/abs
-                 :sqrt Math/sqrt })
-(do
-  (let [sys (sys/init!)]
+                :sqrt Math/sqrt })
 
+(do
+  (let [sys 1]
     (math/init! cljs-math)
-    (logit "Here we go")
+    (jsu/log "Here we go test shad 0")
+    (jsu/log (three/mk-three-shader test-shader))
     (three/init cam-func)
     (listen/on-keys scr got-key!)
-    (do-time-stuff (fn [v] (comment logit (str v))))
-    (mk-world-geom!)))
+    (do-time-stuff (fn [v] (comment jsu/log (str v))))
+    (comment mk-world-geom!)))
+
+
+
+
+

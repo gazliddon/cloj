@@ -27,9 +27,6 @@
 (defn went-off? [k] (:went-off (get-state k)))
 (defn all-reset! [] (swap! keytab {}))
 
-(defn filter-keys' [f]
-  (map identity  (filter #(f (second %1)) @keytab) ))
-
 (defn filter-keys [f]
   (map first  (filter #(f (second %1)) @keytab) ))
 

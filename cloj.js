@@ -16,6 +16,7 @@ goog.addDependency("../gaz/frame.js", ['gaz.frame'], ['cljs.core', 'cljs.core.as
 goog.addDependency("../gaz/system.js", ['gaz.system'], ['cljs.core', 'gaz.mouse', 'gaz.keys', 'gaz.frame', 'cljs.core.async']);
 goog.addDependency("../gaz/cam.js", ['gaz.cam'], ['cljs.core', 'gaz.math']);
 goog.addDependency("../gaz/listen.js", ['gaz.listen'], ['cljs.core', 'cljs.core.async', 'goog.events']);
-goog.addDependency("../gaz/three.js", ['gaz.three'], ['cljs.core', 'gaz.cam', 'gaz.math']);
+goog.addDependency("../gaz/three.js", ['gaz.three'], ['cloj.jsutil', 'cljs.core', 'gaz.cam', 'gaz.math']);
 goog.addDependency("../gaz/world.js", ['gaz.world'], ['cljs.core', 'gaz.math']);
-goog.addDependency("../cloj/core.js", ['cloj.core'], ['gaz.control', 'cljs.core', 'gaz.system', 'gaz.cam', 'goog.dom', 'gaz.listen', 'gaz.keys', 'gaz.three', 'gaz.math', 'cljs.core.async', 'goog.events', 'gaz.world']);
+goog.addDependency("../cloj/jsutil.js", ['cloj.jsutil'], ['gaz.control', 'cljs.core', 'gaz.system', 'gaz.cam', 'goog.dom', 'gaz.listen', 'gaz.keys', 'gaz.three', 'gaz.math', 'cljs.core.async', 'goog.events', 'gaz.world']);
+goog.addDependency("../cloj/core.js", ['cloj.core'], ['cloj.jsutil', 'gaz.control', 'cljs.core', 'gaz.system', 'gaz.cam', 'goog.dom', 'gaz.listen', 'gaz.keys', 'gaz.three', 'gaz.math', 'cljs.core.async', 'goog.events', 'gaz.world']);
