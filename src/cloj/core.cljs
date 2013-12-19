@@ -32,9 +32,6 @@
                   :fragmentShader  "fragment_shader_screen"
                   :uniforms        {:time { :type "f" :value 0.0 } }})
 
-(def test-shader (get-source shader-def))
-
-(jsu/log test-shader)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
 (defn- req-anim-frame [outchan]
@@ -105,11 +102,10 @@
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
-    (jsu/log (three/mk-three-shader test-shader))
     (three/init cam-func)
     (listen/on-keys scr got-key!)
     (do-time-stuff (fn [v] (comment jsu/log (str v))))
-    (comment mk-world-geom!)))
+    (mk-world-geom!)))
 
 
 

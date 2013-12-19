@@ -7,66 +7,8 @@
 (def THREE js/THREE)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn gaz-clj->js
-  "makes a javascript map from a clojure one"
-  [cljmap]
-  (let [out (js-obj)
-        pout (fn [k v] (aset out (name k) v))
-        mapf (fn [[k v]]
-               (if (map? v)
-                   (pout k (gaz-clj->js v))
-                   (pout k v)))]
-    (doall (map mapf cljmap)) out))
-
 (defn mk-three-shader [shad]
-  (THREE.ShaderMaterial. (gaz-clj->js shad)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Feedback Stuff
-
-(defrecord Feedback [cam scene-0 scene-1])
-(defrecord OffScreen [scene rt])
-
-(defn mk-render-target [width height]
-  (THREE.WebGLRenderTarget.
-    width height
-    (gaz-clj->js {:minFilter  THREE.LinearFilter
-                  :magFilter  THREE.LinearFilter
-                  :format     THREE.RGBFormat })))
-
-(defn mk-quad-mesh [width height material]
-  (THREE.Mesh (THREEE.PlaneGeometry. width height) material))
-
-(defn mk-offscr-material [mat previous-rt ]
-  (mk-three-shader (assoc mat :prevScreen {:type "t" :value previous-rt })))
-
-(defn mk-scene [mat width height my-rt previous-rt]
-  (let [msh (mk-quad-mesh width height (mk-offscr-material mat previous-rt))
-        scn (THREE.Scene.) ]
-    (.add scn msh)
-    OffScreen. scn my-rt))
-
-(defn mk-feedback [material width height]
-
-  (let [[wd2 hd2] [(/ width 2.0) (/ height 2.0)]
-        mk-scn    (partial mk-scene material width height)
-        plane     (THREE.PlaneGeometry. width height)
-        rt0       (mk-render-target width height)
-        rt1       (mk-render-target width height) ]
-
-    (Feedback.
-      (THREE.OrthographicCamera. (- wd2) wd2 hd2 (- hd2) 0 1000)
-      (mk-scn rt0 rt1)
-      (mk-scn rt1 rt0))))
-
-(defn render-feedback [r t [cam scn-0 scn-1]]
-  (.clear r)
-  (.render
-    (:sceen scn-0) cam (:rt scn-0, true))
-  (Feedback.  cam scn-1 scn-1))
-
-(def tojs gaz-clj->js)
+  (THREE.ShaderMaterial. (jsu/tojs shad)))
 
 (defn mk-t-quad []
   (let 
@@ -88,9 +30,9 @@
 
 (def material (THREE.MeshPhongMaterial. (clj->js {:color 0x00ff00 :shininess 100})))
 
-(def r-material (THREE.MeshBasicMaterial. (clj->js {:color 0xff0000})))
-(def g-material (THREE.MeshBasicMaterial. (clj->js {:color 0x00ff00})))
-(def b-material (THREE.MeshBasicMaterial. (clj->js {:color 0x0000ff})))
+(def r-material (THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0xff0000})))
+(def g-material (THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0x00ff00})))
+(def b-material (THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0x0000ff})))
 
 (defn mk-vec [in] (THREE.Vector3. (:x in) (:y in) (:z in)))
 
@@ -125,8 +67,8 @@
 
 
 (defn mk-light []
-  (let [light (THREE.DirectionalLight. 0xffffff)
-        dir (.normalize (THREE.Vector3. 1 1 1))]
+  (let [light  (THREE.DirectionalLight. 0xffffff)
+        dir    (.normalize (THREE.Vector3. 1 1 1))]
     (set! (.-position light) dir)
     light))
 
