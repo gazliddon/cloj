@@ -95,12 +95,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
-
 (def cljs-math { :abs  Math/abs
                  :sqrt Math/sqrt })
 (def test-shader
                   { :vertexShader    "vertexShader"
                     :fragmentShader  "fragment_shader_screen"
+                    :attributes      {}
                     :uniforms        {:time { :type "f" :value 0.0 } }})
 
 (def map-to-shader-material
@@ -122,8 +122,8 @@
     (jsu/log "Here we go test shad 0")
     (do-tests test-data)
     (three/init cam-func )
+    (three/test (map-to-shader-material test-shader))
     (listen/on-keys scr got-key!)
     (do-time-stuff (fn [v] (comment jsu/log (str v))))
     (mk-world-geom!)))
-
 

@@ -75,6 +75,11 @@
     (set! (.-position light) dir)
     light))
 
+(defn test [mat]
+  (let [pos (math/vec3 0 0 0)
+        test-cube (mk-cube-mat mat pos)]
+    (.add scene test-cube)))
+
 (defn init [f ]
   (let []
     (.setSize renderer width height)
