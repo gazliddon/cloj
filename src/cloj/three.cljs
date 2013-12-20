@@ -11,15 +11,15 @@
 (defn mk-shader-material [shad]
   (THREE.ShaderMaterial. (jsu/tojs shad)))
 
-
+(defn mk-img-mat [img-uri]
+  (let [img (.loadTexture THREE.ImageUtils img-uri)
+        mat (THREE.MeshLambertMaterial. (js-obj "map" img))]
+    mat))
 
 (defn mk-t-quad []
   (let 
     [plane    ( THREE.PlaneGeometry. 10 10)
-     img      ( .loadTexture THREE.ImageUtils "feedback.jpg")
-     jsmap    ( js-obj "map" img)
-     material ( THREE.MeshLambertMaterial. jsmap )
-     mesh     ( THREE.Mesh. plane material) ]
+     mesh     ( THREE.Mesh. plane (mk-img-mat "feedback.jpg")) ]
     mesh))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
