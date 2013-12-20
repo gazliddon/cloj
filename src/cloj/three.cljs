@@ -1,13 +1,14 @@
 (ns gaz.three
-  (:require 
+  (:require
     [cloj.jsutil :as jsu ]
     [gaz.math :as math ]
+    [gaz.feedback :as fb ]
     [gaz.cam :as Cam]))
 
 (def THREE js/THREE)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn mk-three-shader [shad]
+(defn mk-shader-material [shad]
   (THREE.ShaderMaterial. (jsu/tojs shad)))
 
 (defn mk-t-quad []
@@ -29,6 +30,7 @@
 (def geometry (THREE.CubeGeometry. 1 1 1))
 
 (def material (THREE.MeshPhongMaterial. (clj->js {:color 0x00ff00 :shininess 100})))
+(def material (THREE.MeshPhongMaterial. (clj->js {:color 0x00ff00 :shininess 100})))
 
 (def r-material (THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0xff0000})))
 (def g-material (THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0x00ff00})))
@@ -38,6 +40,7 @@
 
 (def cube (THREE.Mesh. geometry material))
 (defn setpos! [cb v] (set! (.-position cb) (mk-vec v)))
+
 
 (defn mk-cube-mat [mat ^V/Vec3 v]
   (let [cb (THREE.Mesh. geometry mat)]
@@ -72,7 +75,7 @@
     (set! (.-position light) dir)
     light))
 
-(defn init [f]
+(defn init [f ]
   (let []
     (.setSize renderer width height)
     (.appendChild js/document.body (.-domElement renderer) )

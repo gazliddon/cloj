@@ -1,23 +1,26 @@
-(ns gaz.feedback
-  (:require [cloj.jsutil :as jsu ]))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Some stuff for making a feedback screen using Three js
 
-(def tojs jsu/tojs)
+(ns gaz.feedback
+  (:require
+    [gaz.three   :as THREE]
+    [cloj.jsutil :as jsu]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Render Target
 (defn mk-render-target [w h]
   (THREE.WebGLRenderTarget.
-    w h (tojs { :minFilter THREE.LinearFilter
-                :magFilter  THREE.LinearFilter
-                :format     THREE.RGBFormat })))
+    w h (jsu/tojs { :minFilter THREE.LinearFilter
+                :magFilter THREE.LinearFilter
+                :format    THREE.RGBFormat })))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Material
-(defn mk-offscr-material [mat-hash previous-rt]
+(defn mk-offscr-material [material previous-rt]
   (THREE.ShaderMaterial.
-    (tojs (assoc
-            mat-hash
-            :prevScreen { :type "t" :value previous-rt }
-            :time       { :type "f" :value 0.0}))))
+    (jsu/tojs (assoc material
+                     :prevScreen { :type "t" :value previous-rt }
+                     :time       { :type "f" :value 0.0}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Full screen Quad
@@ -34,8 +37,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Camera
 (defn mk-cam [w h]
-  (let [wdiv2 (/ w 2)
-        hdiv2 (/ h 2)]
+  (let [wdiv2 (/ w 2)  hdiv2 (/ h 2)]
     (THREE.OrthographicCamera. (- wdiv2) wdiv2 hdiv2 (- hdiv2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

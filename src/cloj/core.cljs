@@ -1,36 +1,35 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (ns cloj.core
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [goog.dom :as dom]
-            [goog.events :as events]
+
+  (:require [goog.dom        :as dom]
+            [goog.events     :as events]
+            [gaz.feedback    :as fb]
             [cljs.core.async :as ca]
-            [gaz.system :as sys]
-            [cloj.jsutil :as jsu]
-            [gaz.world :as world]
-            [gaz.listen :as listen]
-            [gaz.three :as three]
-            [gaz.keys :as gkeys]
-            [gaz.cam :as cam]
-            [gaz.math :as math]
-            [gaz.control :as control]))
+            [gaz.system      :as sys]
+            [cloj.jsutil     :as jsu]
+            [gaz.world       :as world]
+            [gaz.listen      :as listen]
+            [gaz.three       :as three]
+            [gaz.keys        :as gkeys]
+            [gaz.cam         :as cam]
+            [gaz.math        :as math]
+            [gaz.control     :as control]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn func-on-vals [mp func kyz]
   (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
 
-(def get-text (comp #(.-textContent %) dom/getElement))
+(def get-text
+  (comp #(.-textContent %) dom/getElement))
 
 (defn get-source [shad]
   (func-on-vals shad get-text [:vertexShader :fragmentShader]))
 
-
-
 (def scr (dom/getElement "scr"))
 
-(def shader-def { :vertexShader    "vertexShader"
-                  :fragmentShader  "fragment_shader_screen"
-                  :uniforms        {:time { :type "f" :value 0.0 } }})
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
@@ -54,9 +53,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def mk-cube-from-tile (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
-(defn mk-world-geom! [] (world/iterate-world mk-cube-from-tile world/world-map) )
+(def mk-cube-from-tile
+  (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
 
+(defn mk-world-geom! []
+  (world/iterate-world mk-cube-from-tile world/world-map) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Take an action on a key
@@ -96,18 +97,33 @@
 ;; start the app
 
 (def cljs-math { :abs  Math/abs
-                :sqrt Math/sqrt })
+                 :sqrt Math/sqrt })
+(def test-shader
+                  { :vertexShader    "vertexShader"
+                    :fragmentShader  "fragment_shader_screen"
+                    :uniforms        {:time { :type "f" :value 0.0 } }})
 
+(def map-to-shader-material
+  (comp #(THREE.ShaderMaterial. %1) jsu/tojs get-source))
+
+(def test-data
+  {  :render-target   #(fb/mk-render-target 512 512 )
+     :test-material   #(map-to-shader-material test-shader)
+     :camera          #(fb/mk-cam 512 512)
+   })
+
+(defn do-tests [t-data]
+  (doseq [[k v] t-data]
+    (jsu/log (name k))
+    (jsu/log (v))))
 (do
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
-    (three/init cam-func)
+    (do-tests test-data)
+    (three/init cam-func )
     (listen/on-keys scr got-key!)
     (do-time-stuff (fn [v] (comment jsu/log (str v))))
     (mk-world-geom!)))
-
-
-
 
 

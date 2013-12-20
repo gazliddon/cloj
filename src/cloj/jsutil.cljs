@@ -16,7 +16,7 @@
      pout ( fn [k v]   ( aset out ( name k) v))
      mapf ( fn [[k v]]
             (if (map? v)
-              (pout k (gaz-clj->js v))
+              (pout k (tojs v))
               (pout k v)))]
     (doall (map mapf cljmap)) out))
 
