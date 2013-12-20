@@ -11,6 +11,8 @@
 (defn mk-shader-material [shad]
   (THREE.ShaderMaterial. (jsu/tojs shad)))
 
+
+
 (defn mk-t-quad []
   (let 
     [plane    ( THREE.PlaneGeometry. 10 10)
@@ -68,7 +70,6 @@
     ( aget item)
     ( aset "value" v)))
 
-
 (defn mk-light []
   (let [light  (THREE.DirectionalLight. 0xffffff)
         dir    (.normalize (THREE.Vector3. 1 1 1))]
@@ -76,8 +77,9 @@
     light))
 
 (defn test [mat]
-  (let [pos (math/vec3 0 0 0)
-        test-cube (mk-cube-mat mat pos)]
+  (let [pos (math/vec3 (- 5) 0 0)
+        test-cube (THREE.Mesh. (THREE.PlaneGeometry. 5 5 ) mat)]
+    (jsu/log test-cube)    
     (.add scene test-cube)))
 
 (defn init [f ]
@@ -85,7 +87,7 @@
     (.setSize renderer width height)
     (.appendChild js/document.body (.-domElement renderer) )
     (.add scene cube)
-    (.add scene (mk-t-quad))
+    (comment .add scene (mk-t-quad))
     (.add scene ( THREE.AmbientLight. 0x202020))
     (.add scene (mk-light))
     (render f)))

@@ -29,8 +29,6 @@
 
 (def scr (dom/getElement "scr"))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
 (defn- req-anim-frame [outchan]
@@ -120,10 +118,9 @@
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
-    (do-tests test-data)
     (three/init cam-func )
     (three/test (map-to-shader-material test-shader))
     (listen/on-keys scr got-key!)
     (do-time-stuff (fn [v] (comment jsu/log (str v))))
-    (mk-world-geom!)))
+    (comment mk-world-geom!)))
 
