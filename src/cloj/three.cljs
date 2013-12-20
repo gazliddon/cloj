@@ -78,9 +78,9 @@
 
 (defn test [mat]
   (let [pos (math/vec3 (- 5) 0 0)
-        test-cube (THREE.Mesh. (THREE.PlaneGeometry. 5 5 ) mat)]
-    (jsu/log test-cube)    
-    (.add scene test-cube)))
+        test-mesh (THREE.Mesh. (THREE.PlaneGeometry. 5 5 ) mat)]
+    (jsu/log test-mesh)    
+    (.add scene test-mesh)))
 
 (defn init [f ]
   (let []
