@@ -1,4 +1,3 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (ns cloj.core
   (:require-macros [cljs.core.async.macros :refer [go]])
 
@@ -14,10 +13,10 @@
             [gaz.keys        :as gkeys]
             [gaz.cam         :as cam]
             [gaz.math        :as math]
+            [gaz.obj         :as obj]
             [gaz.control     :as control]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn func-on-vals [mp func kyz]
   (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
 
@@ -49,7 +48,6 @@
         (let [v (ca/<! time-chan)]
           (f v)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def mk-cube-from-tile
   (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
@@ -91,8 +89,41 @@
   (let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
     (cam/update (assoc cam :vel nv))))
 
+
+(defn update-func [cam]
+  (do
+    (obj/update-objs!)
+    (cam-func cam)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn cube-init [obj & rst])
+(defn cube-update [obj])
+
+(def obj-types { :cube {:init cube-init
+                        :update cube-update}})
+(defn obj-test [])
+
+(defn create-obj [typ pos vel & rst]
+  (let [init-record (obj-types typ)]
+    (->
+      (obj/mk-obj pos vel)
+      ((:init init-record) rst)
+      (obj/add-obj!))))
+
+(defn create-obj-from-typ [typ-record pos vel & rst]
+  (let [ init-func (fn [obj] 
+                     (do (apply (:init typ-record) obj rst) 
+                       obj))]
+    (-> (obj/mk-obj pos vel)
+      (assoc :update (:update typ-record)
+             :init   (:init typ-record))
+      (init-func))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
+
 (def cljs-math { :abs  Math/abs
                  :sqrt Math/sqrt })
 (def test-shader
@@ -118,9 +149,7 @@
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
-    (three/init cam-func )
+    (three/init update-func )
     (three/test (map-to-shader-material test-shader))
-    (listen/on-keys scr got-key!)
-    (do-time-stuff (fn [v] (comment jsu/log (str v))))
-    (comment mk-world-geom!)))
+    (listen/on-keys scr got-key!)))
 

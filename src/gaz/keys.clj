@@ -22,14 +22,35 @@
 (defn new-state! [k new-state]
     (swap! keytab #(assoc %1 k (update-state (get-state k) new-state))))
 
-(defn pressed? [k] (:state (get-state k)))
-(defn went-on? [k] (:went-on (get-state k)))
-(defn went-off? [k] (:went-off (get-state k)))
-(defn all-reset! [] (swap! keytab {}))
+(defn pressed?
+  "Is this key held down?"
+  [k] (:state (get-state k)))
 
-(defn filter-keys [f]
-  (map first  (filter #(f (second %1)) @keytab) ))
+(defn went-on?
+  "Did this key get pressed down last update?"
+  [k] (:went-on (get-state k)))
 
-(defn get-keys-on [] (filter-keys :state))
-(defn get-keys-went-on [] (filter-keys :went-on))
-(defn get-keys-went-off [] (filter-keys :went-off))
+(defn went-off?
+  "Was this ket released during the last update?"
+  [k] (:went-off (get-state k)))
+
+(defn all-reset!
+  ""
+  [] (swap! keytab {}))
+
+(defn filter-keys
+  ""
+  [f] (map first  (filter #(f (second %1)) @keytab) ))
+
+(defn get-keys-on
+  ""
+  [] (filter-keys :state))
+
+(defn get-keys-went-on
+  ""
+  [] (filter-keys :went-on))
+
+(defn get-keys-went-off
+  ""
+  [] (filter-keys :went-off))
+
