@@ -21,10 +21,16 @@
           (swap! math-atom util/update-map mth)
           @math-atom))
 
+
+(defrecord Vec3 [^double x ^double y ^double z])
+
+(defn mk-vec
+  ([[x y z]] (Vec3. x y z))
+  ([x y z]   (Vec3. x y z)))
+
 (defn abs [v] ( (:abs @math-atom) v))
 (defn sqrt [v] ( (:sqrt @math-atom) v))
 
-(defrecord Vec3 [^double x ^double y ^double z])
 
 (defn vec3 [^double x ^double y ^double z]
   (Vec3. x y z))

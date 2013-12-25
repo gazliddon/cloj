@@ -39,6 +39,21 @@
 (defn update-objs! []
   (swap! objs process-objs))
 
+;; TODO add defaul init and and update funcs
+
+(defn create-obj-from-typ [typ-record pos vel & rst]
+  (let [ init-func (fn [obj] 
+                     (do (apply (:init typ-record) obj rst) 
+                       obj))]
+    (-> (obj/mk-obj pos vel)
+      (assoc :update (:update typ-record)
+             :init   (:init typ-record))
+      (init-func))))
+
+(defn add-obj-from-typ! [typ-record pos vel & rst]
+  (add-obj! (create-obj-from-typ typ-record pos vel rst)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- get-oscillate-vel [pos vel origin scale]
   (->> pos

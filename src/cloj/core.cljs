@@ -16,6 +16,8 @@
             [gaz.obj         :as obj]
             [gaz.control     :as control]))
 
+(def THREE js/THREE)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn func-on-vals [mp func kyz]
   (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
@@ -41,13 +43,12 @@
     (fn [[a b]] (- b a))
     (ca/partition 2 (req-anim-frame (ca/chan)))))
 
-(def time-chan (mk-time-chan))
+(comment def time-chan (mk-time-chan))
 
-(defn do-time-stuff [f]
+(comment defn do-time-stuff [f]
   (go (while true
         (let [v (ca/<! time-chan)]
           (f v)))))
-
 
 (def mk-cube-from-tile
   (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
@@ -95,7 +96,6 @@
     (obj/update-objs!)
     (cam-func cam)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn cube-init [obj & rst])
@@ -103,23 +103,19 @@
 
 (def obj-types { :cube {:init cube-init
                         :update cube-update}})
-(defn obj-test [])
+(def test-objs 
+  [[:cube [0 0 0] [0 0 0]]
+   [:cube [0 0 0] [0 0 0]]
+   [:cube [0 0 0] [0 0 0]]
+   [:cube [0 0 0] [0 0 0]] ])
 
-(defn create-obj [typ pos vel & rst]
-  (let [init-record (obj-types typ)]
-    (->
-      (obj/mk-obj pos vel)
-      ((:init init-record) rst)
-      (obj/add-obj!))))
+(defn add-obj-from-array! [[typ parr varr]]
+  (let [pos (math/mk-vec parr)
+        vel (math/mk-vec varr) ]
+    (obj/add-obj-from-typ! (obj-types typ) pos vel)))
 
-(defn create-obj-from-typ [typ-record pos vel & rst]
-  (let [ init-func (fn [obj] 
-                     (do (apply (:init typ-record) obj rst) 
-                       obj))]
-    (-> (obj/mk-obj pos vel)
-      (assoc :update (:update typ-record)
-             :init   (:init typ-record))
-      (init-func))))
+(defn add-test-objs! [obj-arr]
+  (map add-obj-from-array! obj-arr obj-arr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
@@ -133,7 +129,7 @@
                     :uniforms        {:time { :type "f" :value 0.0 } }})
 
 (def map-to-shader-material
-  (comp #(THREE.ShaderMaterial. %1) jsu/tojs get-source))
+  (comp three/mk-shader-material get-source))
 
 (def test-data
   {  :render-target   #(fb/mk-render-target 512 512 )
@@ -149,6 +145,7 @@
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
+    (add-test-objs! test-objs)
     (three/init update-func )
     (three/test (map-to-shader-material test-shader))
     (listen/on-keys scr got-key!)))
