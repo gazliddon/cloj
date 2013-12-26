@@ -89,7 +89,9 @@
     cb))
 
 (defn mk-cube [v] (mk-cube-mat material v))
-(defn add-geom [x] (.add scene x))
+(defn add-geom [x] (.add scene x) x)
+
+(def add-cube (comp add-geom mk-cube))
 
 (def cam
   (atom (Cam/Cam. (math/vec3 0 0 10) (math/vec3 0 0 0) (math/vec3 0 0 0))))

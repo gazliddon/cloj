@@ -42,16 +42,17 @@
   (doall 
     (lo-update-objs!)) )
 
-;; TODO add defaul init and and update funcs
+(defn- default-init [o] o)
+(defn- default-update [o t] o)
 
+;; TODO add defaul init and and update funcs
 (defn create-obj-from-typ [typ-record pos vel & rst]
   (let [init (:init typ-record)
         obj (assoc
               (mk-obj pos vel)
               :update (:update typ-record)
               :init init)]
-    (init obj pos vel rst)
-    obj))
+    (init obj pos vel rst)))
 
 (defn add-obj-from-typ! [typ-record pos vel & rst]
   (add-obj! (create-obj-from-typ typ-record pos vel rst)))

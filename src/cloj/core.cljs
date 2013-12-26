@@ -32,6 +32,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
+
 (defn- req-anim-frame [outchan]
   (do
     (js/requestAnimationFrame #(req-anim-frame outchan))
@@ -97,35 +98,40 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def strog (comp jsu/log str))
-
 (defn cube-init [obj & rst]
-  (jsu/log "inited cube!")
-  (jsu/log (:pos obj))
-  (jsu/log (:vel obj)))
+  (assoc obj
+         :cube (three/add-cube (:pos obj))))
 
-(defn cube-update [obj]
-  (jsu/log "update cube"))
+(defn cube-update! [obj]
+  (three/setpos! (:cube obj) (:pos obj))
+  obj)
 
 (def obj-types { :cube {:init   cube-init
-                        :update cube-update}})
-(def test-objs 
-  [[:cube [1 0 0] [0 0 0]]
-   [:cube [0 2 0] [0 0 0]]
-   [:cube [0 0 0] [0 0 0]]
-   [:cube [0 0 1] [0 0 0]] ])
+                        :update cube-update!}})
 
+
+
+(def test-objs 
+  [[:cube [1 0 0] [0.05  0.01  0]]
+   [:cube [0 2 0] [0.01  0.02  0]]
+   [:cube [0 0 0] [0.02  0.001 0]]
+   [:cube [0 0 1] [0.004 0.04  0]] ])
+
+(defn add-obj-from-array! [[typ parr varr]]
+  (obj/add-obj-from-typ!
+      (obj-types typ)
+      (math/mk-vec parr)
+      (math/mk-vec varr)))
 
 (defn add-obj-from-array! [[typ parr varr]]
   (let [pos (math/mk-vec parr)
         vel (math/mk-vec varr)
         init-rec (obj-types typ)]
-    (obj/add-obj-from-typ! init-rec pos vel)))
+    (obj/add-obj-from-typ! init-rec (math/mk-vec parr) vel)))
 
 (defn add-test-objs! [obj-arr]
   (dorun
     (map add-obj-from-array! obj-arr )))
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -156,8 +162,8 @@
   (let [sys 1]
     (math/init! cljs-math)
     (jsu/log "Here we go test shad 0")
-    (add-test-objs! test-objs)
     (three/init update-func )
+    (add-test-objs! test-objs)
     (three/test (map-to-shader-material test-shader))
     (listen/on-keys scr got-key!)))
 
