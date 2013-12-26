@@ -15,8 +15,8 @@
 
 (defn update [obj]
   (let [ufunc (:update obj)]
-    (if ufunc (ufunc obj))
-    obj))
+    (if ufunc (ufunc obj)
+      obj)))
 
 (defn add-vels [obj]
   (assoc obj :pos (math/add
@@ -64,11 +64,11 @@
     (math/mul-scalar scale)
     (math/add vel)))
 
-(defn home [home-to homer scale]
+(defn home [home-pos homer scale]
   (assoc homer :vel (get-oscillate-vel
                       (:pos homer)
                       (:vel homer)
-                      (:pos home-to)
+                      home-pos
                       scale)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

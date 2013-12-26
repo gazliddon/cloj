@@ -103,19 +103,20 @@
          :cube (three/add-cube (:pos obj))))
 
 (defn cube-update! [obj]
-  (three/setpos! (:cube obj) (:pos obj))
-  obj)
+  (let [ret-obj (obj/home math/zero obj 0.001)]
+    (three/setpos!
+      (:cube ret-obj) 
+      (:pos ret-obj))
+    ret-obj))
 
 (def obj-types { :cube {:init   cube-init
                         :update cube-update!}})
 
-
-
 (def test-objs 
-  [[:cube [1 0 0] [0.05  0.01  0]]
+  [[:cube [1 0 0] [0.05  0 0.01  0]]
    [:cube [0 2 0] [0.01  0.02  0]]
-   [:cube [0 0 0] [0.02  0.001 0]]
-   [:cube [0 0 1] [0.004 0.04  0]] ])
+   [:cube [(- 1) 1 0] [0.02  0.001 0]]
+   [:cube [3 0 0] [0.004 0.04  0]] ])
 
 (defn add-obj-from-array! [[typ parr varr]]
   (obj/add-obj-from-typ!
