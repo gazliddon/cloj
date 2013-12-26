@@ -6,6 +6,8 @@
     [gaz.three   :as THREE]
     [cloj.jsutil :as jsu]))
 
+(def THREE js/THREE)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Render Target
 (defn mk-render-target [w h]

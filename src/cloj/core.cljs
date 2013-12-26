@@ -90,7 +90,6 @@
   (let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
     (cam/update (assoc cam :vel nv))))
 
-
 (defn update-func [cam]
   (do
     (obj/update-objs!)
@@ -98,24 +97,36 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn cube-init [obj & rst])
-(defn cube-update [obj])
+(def strog (comp jsu/log str))
 
-(def obj-types { :cube {:init cube-init
+(defn cube-init [obj & rst]
+  (jsu/log "inited cube!")
+  (jsu/log (:pos obj))
+  (jsu/log (:vel obj)))
+
+(defn cube-update [obj]
+  (jsu/log "update cube"))
+
+(def obj-types { :cube {:init   cube-init
                         :update cube-update}})
 (def test-objs 
-  [[:cube [0 0 0] [0 0 0]]
+  [[:cube [1 0 0] [0 0 0]]
+   [:cube [0 2 0] [0 0 0]]
    [:cube [0 0 0] [0 0 0]]
-   [:cube [0 0 0] [0 0 0]]
-   [:cube [0 0 0] [0 0 0]] ])
+   [:cube [0 0 1] [0 0 0]] ])
+
 
 (defn add-obj-from-array! [[typ parr varr]]
   (let [pos (math/mk-vec parr)
-        vel (math/mk-vec varr) ]
-    (obj/add-obj-from-typ! (obj-types typ) pos vel)))
+        vel (math/mk-vec varr)
+        init-rec (obj-types typ)]
+    (obj/add-obj-from-typ! init-rec pos vel)))
 
 (defn add-test-objs! [obj-arr]
-  (map add-obj-from-array! obj-arr obj-arr))
+  (dorun
+    (map add-obj-from-array! obj-arr )))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
