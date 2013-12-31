@@ -1,5 +1,5 @@
 (ns gaz.math
-  (:require [gaz.util :as util]))
+  (:require [gaz.util :refer [update-map]]))
 
 (defn- default-abs [v]
   (if (< v 0)
@@ -18,7 +18,7 @@
    other things aren't the same"
   
   [mth] (do 
-          (swap! math-atom util/update-map mth)
+          (swap! math-atom update-map mth)
           @math-atom))
 
 

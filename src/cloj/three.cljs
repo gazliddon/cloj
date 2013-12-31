@@ -1,10 +1,23 @@
 (ns gaz.three
+
+  (:require-macros [gaz.macros :refer [with-scene]])
+
   (:require
     [cloj.jsutil :as jsu ]
-    [gaz.math :as math ]
+    [gaz.math :as math :refer [mk-vec]]
     [gaz.feedback :as fb ]
     [gaz.cam :as Cam]))
 
+;; Current scene stuff
+(def ^:dynamic *current-scene* nil)
+
+(defn add [o]
+  (.add *current-scene* o))
+
+(defn render [rt cam]
+  (.render rt *current-scene* cam))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def THREE js/THREE)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -26,25 +39,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Experimental material stuff
 
-(def materials {:red-flat   {:three-material THREE.MeshPhongMaterial
+(def three-materials {
+                      :phong (fn [v] THREE.MeshPhongMaterial. v)})
+
+
+(def materials {:red-flat   {:three-material :fong
                              :color 0xff0000
                              :shininess 100 }
 
-                :green-flat {:three-material THREE.MeshPhongMaterial
+                :green-flat {:three-material :fong
                              :color 0x00ff00
                              :shininess 100 }
 
-                :blue-flat  {:three-material THREE.MeshPhongMaterial
+                :blue-flat  {:three-material :fong
                              :color 0x0000ff
                              :shininess 100 }
 
-                :feedback-img {:three-material THREE.MeshPhongMaterial
+                :feedback-img {:three-material :fong
                                :color 0x00ff00
                                :shininess 100
                                :map "feedback.jpg" }})
 
 (def xforms
-  {:map #(.loadTexture THREE.ImageUtils %1)})
+  {:map #(.loadTexture THREE.ImageUtils %1) })
 
 (defn do-xform [xforms-tab k v]
   (if (xforms-tab v) (xforms-tab v) v))
@@ -57,16 +74,31 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn mk-vec [in] (THREE.Vector3. (:x in) (:y in) (:z in)))
-(defn setpos! [cb v] (set! (.-position cb) (mk-vec v)))
+(defn mk-three-vec [in] (THREE.Vector3. (:x in) (:y in) (:z in)))
+(defn set-pos! [cb v] (set! (.-position cb) (mk-three-vec v)))
+(defn set-rot! [cb v] (set! (.-rotation cb) (mk-three-vec v)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def renderer (THREE.WebGLRenderer.))
 (def scene (THREE.Scene.) )
+
 (def width (.-innerWidth js/window))
 (def height (.-innerHeight js/window))
+(def wd2 (/ width 2))
+(def hd2 (/ height 2))
+(def aspect-ratio (/ width height))
+
+(def sscale 5.0)
+(def camera (THREE.OrthographicCamera.
+              (- (* aspect-ratio sscale ))
+              (* aspect-ratio sscale )
+              sscale
+              (- sscale)
+              0.1 1000 ))
 (def camera (THREE.PerspectiveCamera. 75 (/ width height) 0.1 1000 ))
+
 (def geometry (THREE.CubeGeometry. 1 1 1))
 
 (def material
@@ -85,7 +117,7 @@
 
 (defn mk-cube-mat [mat ^V/Vec3 v]
   (let [cb (THREE.Mesh. geometry mat)]
-    (setpos! cb v)
+    (set-pos! cb v)
     cb))
 
 (defn mk-cube [v] (mk-cube-mat material v))
@@ -99,11 +131,6 @@
 (defn render[f]
   (js/requestAnimationFrame #(render f))
   (swap! cam f)
-  (set! (.-position camera) (mk-vec (:pos @cam)))
-  (set! (.-lookat camera) (mk-vec (:lookat @cam)))
-  (set! (.-x (.-rotation cube))  (+ 0.01 (.-x (.-rotation cube))))
-  (set! (.-y (.-rotation cube))  (+ 0.04 (.-y (.-rotation cube))))
-  (set! (.-x (.-position cube))  (+ 0.001 (.-x (.-position cube))))
   (.render renderer scene camera))
 
 (defn set-time [mat item v]
@@ -118,22 +145,18 @@
     (set! (.-position light) dir)
     light))
 
-(defn test [mat]
-  (let [pos (math/vec3 (- 5) 0 0)
-        test-mesh (THREE.Mesh. (THREE.PlaneGeometry. 5 5 ) mat)]
-    (jsu/log test-mesh)
-    (.add scene test-mesh)))
+(defn mk-scene [] (THREE.Scene.))
+
+(def game-screen (atom nil))
 
 (defn init [f ]
   (let []
     (.setSize renderer width height)
     (.appendChild js/document.body (.-domElement renderer) )
-    (.add scene cube)
-    (comment .add scene (mk-t-quad))
-    (.add scene ( THREE.AmbientLight. 0x202020))
-    (.add scene (mk-light))
+    
+    (with-scene scene
+                (add ( THREE.AmbientLight. 0x202020))
+                (add (mk-light)))
     (render f)))
-
-
 
 

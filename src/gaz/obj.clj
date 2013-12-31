@@ -64,7 +64,7 @@
     (math/mul-scalar scale)
     (math/add vel)))
 
-(defn home [home-pos homer scale]
+(defn home! [homer home-pos scale]
   (assoc homer :vel (get-oscillate-vel
                       (:pos homer)
                       (:vel homer)

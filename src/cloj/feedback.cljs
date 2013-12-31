@@ -64,6 +64,63 @@
   "TODO!"
   [])
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;0;
+(defprotocol Renderable
+  (render [this scene camera ])
+  (get-rt [this])
+  (get-width [this])
+  (get-height [this])
+  (get-aspect-ratio [this]))
+
+(extend-protocol Renderable
+  object
+  (render [obj scene camera]
+    (.render (get-rt obj) scene camera))
+  (get-width [obj] (get-width (get-rt obj)))
+  (get-height [obj] (get-height (get-rt obj)))
+  (get-aspect-ratio [obj] (/ (get-width obj) (get-height obj))))
+
+;; Rendertaget stuff
+(defrecord RenderTarget [w h rt]
+  Renderable
+  (get-rt [_] rt)
+  (get-width [_] w)
+  (get-height [_] h) )
+
+(defn mk-render-target [w h]
+  (let [rt (THREE.WebGLRenderTarget.
+             w h (jsu/tojs {:minFilter THREE.LinearFilter
+                            :magFilter THREE.LinearFilter
+                            :format    THREE.RGBFormat }))]
+    (->RenderTarget w h rt)))
+
+
+;; Feedback Buffer
+(defrecord FeedbackBuffer [dest-rt source-rt]
+  Renderable
+  (render [_ scene camera]
+    (.render dest-rt scene camera))
+  (get-rt [_] (get-rt dest-rt)))
+
+(defrecord Feedback [material front-buffer back-buffer cam scene]
+  Renderable
+  (get-rt [_] (get-rt front-buffer)))
+
+(defn mk-feedback [w h material]
+  (let [front-rt (mk-render-target w h)
+        back-rt  (mk-render-target w h)]
+    (->Feedback
+      material
+      (->FeedbackBuffer back-rt front-rt)
+      (->FeedbackBuffer back-rt front-rt)
+      nil
+      nil)))
+
+(defn flip-fb [fb]
+  (-> fb
+    (assoc :front-buffer (:back-buffer  fb))
+    (assoc :back-buffer  (:front-buffer fb))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ends
 

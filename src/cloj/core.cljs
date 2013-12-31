@@ -8,6 +8,10 @@
             [gaz.system      :as sys]
             [cloj.jsutil     :as jsu]
             [gaz.world       :as world]
+            
+            [cloj.g3d        :as g3d]
+            [gaz.render-targets :as rt]
+
             [gaz.listen      :as listen]
             [gaz.three       :as three]
             [gaz.keys        :as gkeys]
@@ -98,42 +102,51 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn rnd-rng [lo hi] (+ lo (rand (- hi lo))))
+(defn rnd-norm [] (rnd-rng -0.5 0.5))
+
+(defn rnd-vec [vmin vmax kyz]
+  (map #(rnd-rng (vmin %1) (vmax %1)) kyz ))
+
+(defn rnd-v3 [mn mx]
+  (math/mk-vec (rnd-vec mn mx [0 1 2])))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn copy-field-to-geo-pos! [obj geo-key]
+  (three/set-pos! (geo-key obj) (:pos obj))
+  obj)
+
 (defn cube-init [obj & rst]
-  (assoc obj
-         :cube (three/add-cube (:pos obj))))
+  (let [cube (three/add-cube (:pos obj))
+        ]
+    (assoc obj
+           :cube cube
+           :rot2 (math/mk-vec 0 1 0)
+           :rvelx (rnd-rng -0.05 0.05)
+           :rvely (rnd-rng -0.05 0.05)
+           :rvelz (rnd-rng -0.05 0.05)
+           :rot (rnd-v3 [-180 -180 -180] [180 180 180]))))
 
 (defn cube-update! [obj]
-  (let [ret-obj (obj/home math/zero obj 0.001)]
-    (three/setpos!
-      (:cube ret-obj) 
-      (:pos ret-obj))
-    ret-obj))
+  (let [cube (:cube obj)]
+    (set! (.-x (.-rotation cube))  (+ (:rvelx obj) (.-x (.-rotation cube))))
+    (set! (.-y (.-rotation cube))  (+ (:rvely obj) (.-y (.-rotation cube))))
+    (set! (.-z (.-rotation cube))  (+ (:rvelz obj) (.-z (.-rotation cube))))
+    (comment three/set-rot! (:cube obj) (:rot2 obj))
+    (-> obj
+      (obj/home! math/zero 0.0005)
+      (copy-field-to-geo-pos! :cube))))
+
 
 (def obj-types { :cube {:init   cube-init
                         :update cube-update!}})
 
-(def test-objs 
-  [[:cube [1 0 0] [0.05  0 0.01  0]]
-   [:cube [0 2 0] [0.01  0.02  0]]
-   [:cube [(- 1) 1 0] [0.02  0.001 0]]
-   [:cube [3 0 0] [0.004 0.04  0]] ])
-
-(defn add-obj-from-array! [[typ parr varr]]
+(defn add-rnd-cube-obj! []
   (obj/add-obj-from-typ!
-      (obj-types typ)
-      (math/mk-vec parr)
-      (math/mk-vec varr)))
-
-(defn add-obj-from-array! [[typ parr varr]]
-  (let [pos (math/mk-vec parr)
-        vel (math/mk-vec varr)
-        init-rec (obj-types typ)]
-    (obj/add-obj-from-typ! init-rec (math/mk-vec parr) vel)))
-
-(defn add-test-objs! [obj-arr]
-  (dorun
-    (map add-obj-from-array! obj-arr )))
-
+    (obj-types :cube)
+    (rnd-v3 [-8 -8 -2] [8 8 2])
+    (rnd-v3 [-0.05 -0.05 0.5] [0.05 0.05 -0.5])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
@@ -162,9 +175,14 @@
 (do
   (let [sys 1]
     (math/init! cljs-math)
-    (jsu/log "Here we go test shad 0")
     (three/init update-func )
-    (add-test-objs! test-objs)
-    (three/test (map-to-shader-material test-shader))
+
+    (dotimes
+      [n 100] (add-rnd-cube-obj!))
     (listen/on-keys scr got-key!)))
+
+
+
+
+
 

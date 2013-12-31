@@ -7,7 +7,7 @@ tmux has-session -t $PROJECT_NAME 2>/dev/null
 
 if [ "$?" -eq 1 ] ; then
     echo "No Session found.  Creating and configuring."
-    tmux new-session -d -s $PROJECT_NAME
+    TERM=xterm-256color tmux new-session -d -s $PROJECT_NAME
     tmux neww -n irc ir
     tmux neww -n editor "vim -f"
     tmux splitw -p 10 -v "http-server ."
