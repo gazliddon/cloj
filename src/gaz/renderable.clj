@@ -1,5 +1,4 @@
 (ns gaz.renderable)
 
-
 (defprotocol RenderableProto
-  (render [this]))
+  (render [this renderer]))

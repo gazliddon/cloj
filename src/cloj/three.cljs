@@ -1,8 +1,8 @@
 (ns gaz.three
 
   (:require-macros [gaz.macros :refer [with-scene]])
-
   (:require
+    [gaz.gamescreen :as gs :refer [mk-game-screen-in-window] ]
     [cloj.jsutil :as jsu ]
     [gaz.math :as math :refer [mk-vec]]
     [gaz.feedback :as fb ]
@@ -77,7 +77,6 @@
 (defn mk-three-vec [in] (THREE.Vector3. (:x in) (:y in) (:z in)))
 (defn set-pos! [cb v] (set! (.-position cb) (mk-three-vec v)))
 (defn set-rot! [cb v] (set! (.-rotation cb) (mk-three-vec v)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

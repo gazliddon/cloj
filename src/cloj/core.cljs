@@ -1,17 +1,18 @@
 (ns cloj.core
-  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [gaz.macros             :refer [with-scene]])
 
   (:require [goog.dom        :as dom]
             [goog.events     :as events]
             [gaz.feedback    :as fb]
-            [cljs.core.async :as ca]
+            [cljs.core.async :as ca :refer [chan <! >! put!]]
             [gaz.system      :as sys]
             [cloj.jsutil     :as jsu]
             [gaz.world       :as world]
             
-            [cloj.g3d        :as g3d]
-            [gaz.render-targets :as rt]
-
+            [gaz.gamescreen  :refer [mk-game-screen get-main-scene]]
+            [gaz.renderable  :refer [render]]
+            
             [gaz.listen      :as listen]
             [gaz.three       :as three]
             [gaz.keys        :as gkeys]
@@ -36,30 +37,24 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Time test stuff
-
 (defn- req-anim-frame [outchan]
   (do
     (js/requestAnimationFrame #(req-anim-frame outchan))
-    (ca/put! outchan (.now js/performance))
+    (put! outchan (.now js/performance))
     outchan))
 
 (defn mk-time-chan []
-  (ca/map<
-    (fn [[a b]] (- b a))
-    (ca/partition 2 (req-anim-frame (ca/chan)))))
+  (let [buff (ca/sliding-buffer 1)
+        ch (chan buff)
+        fun (fn [[a b]] (- b a))]
+    (ca/map< fun (ca/partition 2 (req-anim-frame ch)))))
 
-(comment def time-chan (mk-time-chan))
+(def time-chan (mk-time-chan))
 
-(comment defn do-time-stuff [f]
+(defn do-time-stuff [f]
   (go (while true
-        (let [v (ca/<! time-chan)]
+        (let [v (<! time-chan)]
           (f v)))))
-
-(def mk-cube-from-tile
-  (comp three/add-geom (partial three/mk-cube-mat three/r-material ) :pos))
-
-(defn mk-world-geom! []
-  (world/iterate-world mk-cube-from-tile world/world-map) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Take an action on a key
@@ -86,7 +81,7 @@
                {})))
 
 (defn setup-key-listener [elem channel]
-  (listen/on-keys elem (comp (partial ca/put! channel) xform-key-event)))
+  (listen/on-keys elem (comp (partial put! channel) xform-key-event)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn cam-func
@@ -97,7 +92,7 @@
 
 (defn update-func [cam]
   (do
-    (obj/update-objs!)
+    (obj/update-objs! 0)
     (cam-func cam)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -117,23 +112,28 @@
   (three/set-pos! (geo-key obj) (:pos obj))
   obj)
 
+(defn mk-cube [pos]
+  (let [geo (THREE.CubeGeometry. 1 1 1 1)
+        mat three/g-material
+        msh (THREE.Mesh. geo mat)]
+    (three/set-pos! msh pos)
+    msh)) 
+
 (defn cube-init [obj & rst]
-  (let [cube (three/add-cube (:pos obj))
-        ]
+  (let [cube (mk-cube (:pos obj))]
+    (three/add cube)
     (assoc obj
            :cube cube
-           :rot2 (math/mk-vec 0 1 0)
            :rvelx (rnd-rng -0.05 0.05)
            :rvely (rnd-rng -0.05 0.05)
            :rvelz (rnd-rng -0.05 0.05)
            :rot (rnd-v3 [-180 -180 -180] [180 180 180]))))
 
-(defn cube-update! [obj]
+(defn cube-update! [obj tm]
   (let [cube (:cube obj)]
     (set! (.-x (.-rotation cube))  (+ (:rvelx obj) (.-x (.-rotation cube))))
     (set! (.-y (.-rotation cube))  (+ (:rvely obj) (.-y (.-rotation cube))))
     (set! (.-z (.-rotation cube))  (+ (:rvelz obj) (.-z (.-rotation cube))))
-    (comment three/set-rot! (:cube obj) (:rot2 obj))
     (-> obj
       (obj/home! math/zero 0.0005)
       (copy-field-to-geo-pos! :cube))))
@@ -162,27 +162,38 @@
 (def map-to-shader-material
   (comp three/mk-shader-material get-source))
 
-(def test-data
-  {  :render-target   #(fb/mk-render-target 512 512 )
-     :test-material   #(map-to-shader-material test-shader)
-     :camera          #(fb/mk-cam 512 512)
-   })
+(defn mk-full-scr-renderer []
+  (let [renderer (THREE.WebGLRenderer.)
+        width    (.-innerWidth js/window)
+        height   (.-innerHeight js/window) ]
+    (do
+      (.setSize renderer width height)
+      (.appendChild js/document.body (.-domElement renderer))
+      {:renderer renderer :width width :height height })))
 
-(defn do-tests [t-data]
-  (doseq [[k v] t-data]
-    (jsu/log (name k))
-    (jsu/log (v))))
-(do
-  (let [sys 1]
+(defn game-start []
+  (do
     (math/init! cljs-math)
-    (three/init update-func )
 
-    (dotimes
-      [n 100] (add-rnd-cube-obj!))
-    (listen/on-keys scr got-key!)))
+    (comment listen/on-keys scr got-key!)
 
+    (let [fsrend (mk-full-scr-renderer)
+          width  (:width fsrend)
+          height (:height fsrend)
+          renderer (:renderer fsrend)
+          gs     (mk-game-screen width height) ]
 
+      (with-scene (get-main-scene gs)
+                  (three/add (THREE.AmbientLight. 0x202020))
+                  (dotimes [n 100]
+                    (add-rnd-cube-obj!)))
 
+      (go (while true
+            (let [tm (<! time-chan)]
+              (obj/update-objs! tm)
+              (render gs renderer)
+              ))))))
 
+(game-start)
 
 

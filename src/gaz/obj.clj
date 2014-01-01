@@ -13,9 +13,9 @@
     false
     (:dead obj)))
 
-(defn update [obj]
+(defn update [tm obj]
   (let [ufunc (:update obj)]
-    (if ufunc (ufunc obj)
+    (if ufunc (ufunc obj tm)
       obj)))
 
 (defn add-vels [obj]
@@ -33,14 +33,14 @@
 (defn mk-add-obj! [pos vel]
   (add-obj! (mk-obj pos vel)))
 
-(defn lo-update-objs! []
+(defn lo-update-objs! [tm]
   (swap! objs (fn [obj-list]
                 (->> obj-list 
-                  (map (comp add-vels update))))))
+                  (map (comp add-vels (partial update tm) ))))))
 
-(defn update-objs! []
+(defn update-objs! [tm]
   (doall 
-    (lo-update-objs!)) )
+    (lo-update-objs! tm)) )
 
 (defn- default-init [o] o)
 (defn- default-update [o t] o)
