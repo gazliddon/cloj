@@ -10,9 +10,9 @@
 
 (defn mk-render-target [w h]
   (let [rt (THREE.WebGLRenderTarget.
-             w h (clj->js {:minFilter THREE.LinearFilter
-                            :magFilter THREE.LinearFilter
-                            :format    THREE.RGBFormat }))]
+             w h (clj->js {"minFilter" THREE.LinearFilter
+                            "magFilter" THREE.LinearFilter
+                            "format"    THREE.RGBFormat }))]
     (->RenderTarget w h rt)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;0;

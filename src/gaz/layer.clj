@@ -25,8 +25,8 @@
 (defn- aspect [width height] (/ width height))
 
 (defn mk-main-layer [renderer width height]
-  (let [cam (js/THREE.PerspectiveCamera. 30 (aspect width height) 0.1 1000)]
-  (set! (.-position cam) (js/THREE.Vector3. 0 0 10))
+  (let [cam (js/THREE.PerspectiveCamera. 25 (aspect width height) 0.1 1000)]
+  (set! (.-position cam) (js/THREE.Vector3. 0 0 5))
     (Layer. renderer (js/THREE.Scene.) cam )))
 
 (defn mk-hud-layer [renderer width height]

@@ -43,16 +43,16 @@
   (set-rot! msh rot))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def material
-  (js/THREE.MeshPhongMaterial. (clj->js {:color 0x00ff00 :shininess 100})))
+  (js/THREE.MeshPhongMaterial. (clj->js {"color" 0x00ff00 "shininess" 100})))
 
 (def r-material
-  (js/THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0xff0000})))
+  (js/THREE.MeshPhongMaterial. (clj->js {"shininess" 100 "color" 0xff0000})))
 
 (def g-material
-  (js/THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0x00ff00})))
+  (js/THREE.MeshPhongMaterial. (clj->js {"shininess" 100 "color" 0x00ff00})))
 
 (def b-material
-  (js/THREE.MeshPhongMaterial. (clj->js {:shininess 100 :color 0x0000ff})))
+  (js/THREE.MeshPhongMaterial. (clj->js {"shininess" 100 "color" 0x0000ff})))
 
 (def all-mats
   [r-material

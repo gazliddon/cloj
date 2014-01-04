@@ -1355,3 +1355,70 @@ THREE.RepeatWrapping = function(){};
 /** @const */
 THREE.DoubleSide = function(){};
 
+
+
+
+// ============================================================================
+// THREE.CubeGeometry - added by GRL
+// ============================================================================
+
+/**
+@constructor
+@extends {THREE.Geometry}
+@param {?number=} width
+@param {?number=} height
+@param {?number=} depth
+@param {?number=} widthSegments
+@param {?number=} heightSegments
+@param {?number=} depthSegments
+*/
+
+THREE.CubeGeometry = function(width, height, depth, widthSegments, heightSegments, depthSegments ){};
+
+/**
+@constructor
+@extends {THREE.Geometry}
+@param {!number} width
+@param {!number} height
+@param {!number} widthSegments
+@param {!number} heightSegments
+*/
+
+THREE.PlaneGeometry = function(width, height, widthSegments, heightSegments){};
+
+
+/**
+@constructor
+@param {!number} width
+@param {!number} height
+@param {!dict} opts
+*/
+THREE.WebGLRenderTarget= function(width, height, opts){};
+
+/**
+@constructor
+@param {} opts
+*/
+THREE.WebGLRenderer = function(opts){};
+
+/**
+@param {!number} width
+@param {!number} height
+*/
+THREE.WebGLRenderer.setSize = function (width, height) { }
+
+/**
+@param {!THREE.Scene} scene
+@param {!THREE.Camera} camera
+*/
+THREE.WebGLRenderer.render = function (scene, camera) { }
+
+/** @type {!boolean} */       THREE.WebGLRenderer.prototype.autoClear;
+/** @type {*} */              THREE.WebGLRenderer.prototype.domElement;
+
+
+/** @const */
+THREE.RGBFormat = function(){};
+/** @const */
+THREE.RGBAFormat = function(){};
+

@@ -23,18 +23,19 @@
                         :builds [
                                  {:id "dev"
                                   :source-paths ["src"]
-                                  :pretty-print true
                                   :compiler {
                                              :output-to "cloj.js"
                                              :output-dir "out"
+                                             :pretty-print true
                                              :optimizations :none
                                              :source-map true}}
                                  {:id "opt"
                                   :source-paths ["src"]
                                   :compiler {
+                                             :externs ["three.externs.js"]
                                              :output-to "cloj.js"
                                              :output-dir "out-opt"
-                                             :optimizations :whitespace
+                                             :optimizations :advanced
                                              :source-map "test.js.map"}}]})
 
 

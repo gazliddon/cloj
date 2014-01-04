@@ -3,3 +3,5 @@ out
 crossovers
 .lein-repl-history
 cloj.js
+out-opt
+test.js.map
