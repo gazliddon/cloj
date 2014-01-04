@@ -1,6 +1,6 @@
 (ns gaz.materials
   (:require
-    [gaz.math :as math ]))
+    [gaz.math2 :as math ]))
 
 (defn mk-flat [col]
   (THREE.MeshPhongMaterial.

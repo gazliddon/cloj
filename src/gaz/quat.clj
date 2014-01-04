@@ -1,5 +1,5 @@
 (ns gaz.quat 
-  (:require [gaz.math :as math]
+  (:require [gaz.math2 :as math]
             [gaz.util :as u]))
 
 (defrecord Quat [^float x ^float y ^float z ^float w] )

@@ -25,24 +25,21 @@
 (defrecord Vec3 [^double x ^double y ^double z])
 
 (defn mk-vec
-  ([[x y z]] (Vec3. x y z))
-  ([x y z]   (Vec3. x y z)))
+  ([[x y z]] (Vec3. (double x) (double y) (double z)))
+  ([x y z] (Vec3. (double x) (double y) (double z)))
+  )
 
 (defn abs [v] ( (:abs @math-atom) v))
 (defn sqrt [v] ( (:sqrt @math-atom) v))
-
-
-(defn vec3 [^double x ^double y ^double z]
-  (Vec3. x y z))
 
 (defn dot ^double [^Vec3 v0 ^Vec3 v1]
   (+ (*(:x v0)(:x v1)) (*(:y v0)(:y v1)) (*(:z v0) (:z v1))))
 
 (defn applyf ^Vec3 [^Vec3 v0 f]
-  (Vec3. (f (:x v0)) (f (:y v0)) (f (:z v0))))
+  (mk-vec (f (:x v0)) (f (:y v0)) (f (:z v0))))
 
 (defn applyvf ^Vec3 [^Vec3 v0 ^Vec3 v1 f]
-  (Vec3. (f (:x v0) (:x v1)) (f (:y v0)(:y v1)) (f (:z v0)(:z v1))))
+  (mk-vec (f (:x v0) (:x v1)) (f (:y v0)(:y v1)) (f (:z v0)(:z v1))))
 
 (defn mul ^Vec3 [^Vec3 v0 ^Vec3 v1] (applyvf v0 v1 * ))
 (defn sub ^Vec3 [^Vec3 v0 ^Vec3 v1] (applyvf v0 v1 - ))
@@ -74,7 +71,7 @@
 
 (defn ^Vec3 clamp [^Vec3 v-in ^Vec3 v-min ^Vec3 v-max]
   (let [clamper (partial clamp-id v-in v-min v-max)]
-    (Vec3. (clamper :x) (clamper :y) (clamper :z))))
+    (mk-vec (clamper :x) (clamper :y) (clamper :z))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def epsilon 2.220460492503130808472633361816E-16)

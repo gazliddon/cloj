@@ -3,6 +3,12 @@
 
 (ns cloj.jsutil)
 
+(defn random [n]
+  (* (.random js/Math) n))
+
+(defn random-int [n]
+  (bit-or (random n) 0))
+
 (defn log
   "TODO: need to make this multi args"
   [my-args]

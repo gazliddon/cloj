@@ -1,6 +1,6 @@
 (ns gaz.world
   (:require
-    [gaz.math :as math]))
+    [gaz.math2 :as math]))
 
 (defn mk-pos [x y z] (math/vec3 x y z))
 (defn make-coords [w h] (for [ x (range 0 w) y (range 0 h)] (mk-pos x y 0)))

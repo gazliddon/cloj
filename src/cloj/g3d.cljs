@@ -3,7 +3,7 @@
 
   (:require [cljs.core.async :as ca]
             [cloj.jsutil     :as jsu]
-            [gaz.math        :as math]))
+            [gaz.math2        :as math]))
 
 
 (defn- vec-to-tvec [in] (THREE.Vector3. (:x in) (:y in) (:z in)))

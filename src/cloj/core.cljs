@@ -1,60 +1,56 @@
 (ns cloj.core
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [gaz.macros             :refer [with-scene]])
+  (:require-macros
+    [cljs.core.async.macros  :refer [go go-loop]]
+    [gaz.macros              :refer [with-scene]])
 
-  (:require [goog.dom        :as dom]
-            [goog.events     :as events]
-            [gaz.feedback    :as fb]
-            [cljs.core.async :as ca :refer [chan <! >! put!]]
-            [gaz.system      :as sys]
-            [cloj.jsutil     :as jsu]
-            [gaz.world       :as world]
-            
-            [gaz.gamescreen  :refer [mk-game-screen get-main-scene]]
-            [gaz.renderable  :refer [render]]
-            
-            [gaz.listen      :as listen]
-            [gaz.three       :as three]
-            [gaz.keys        :as gkeys]
-            [gaz.cam         :as cam]
-            [gaz.math        :as math]
-            [gaz.obj         :as obj]
-            [gaz.control     :as control]))
+  (:require
+    [goog.dom          :as dom]
+    [cljs.core.async   :as ca :refer [chan <! >! put!]]
+    [gaz.system        :as sys]
+    [cloj.jsutil       :as jsu]
+    [cloj.timechan     :refer  [mk-time-chan]]
+    [gaz.world         :as world]
+    [gaz.feedback      :as fb]
+
+    [gaz.renderable    :refer [render RenderableProto]]
+    [gaz.layer         :refer [mk-main-layer LayerProto get-scene]]
+
+    [gaz.three         :refer [add set-pos! rnd-material set-rot! set-posrot! ]]
+    [gaz.keys          :as gkeys]
+    [gaz.cam           :as cam]
+    [gaz.math2         :as math]
+    [gaz.obj           :as obj :refer [UpdateObject]]
+    [gaz.control       :as control]))
 
 (def THREE js/THREE)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn func-on-vals [mp func kyz]
+(defn func-on-vals [mp func & kyz]
   (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
 
 (def get-text
   (comp #(.-textContent %) dom/getElement))
 
 (defn get-source [shad]
-  (func-on-vals shad get-text [:vertexShader :fragmentShader]))
+  (func-on-vals shad get-text :vertexShader :fragmentShader))
 
 (def scr (dom/getElement "scr"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Time test stuff
-(defn- req-anim-frame [outchan]
-  (do
-    (js/requestAnimationFrame #(req-anim-frame outchan))
-    (put! outchan (.now js/performance))
-    outchan))
+(def shader-mat-base {:vertexShader "vertexShader"
+                      :fragmentShader "fragment_shader_screen"
+                      :uniforms {:prevScreen
+                                 {:type "t" :value nil} }})
+(defn mk-shader-mat [src-texture]
+  (let [hsh (assoc
+              shader-mat-base
+              :uniforms {:prevScreen
+                        { :type "t" :value src-texture}}) ]
 
-(defn mk-time-chan []
-  (let [buff (ca/sliding-buffer 1)
-        ch (chan buff)
-        fun (fn [[a b]] (- b a))]
-    (ca/map< fun (ca/partition 2 (req-anim-frame ch)))))
+    (THREE.ShaderMaterial. (clj->js (get-source hsh)))))
 
-(def time-chan (mk-time-chan))
-
-(defn do-time-stuff [f]
-  (go (while true
-        (let [v (<! time-chan)]
-          (f v)))))
+(defn mk-shader-mat [src-texture]
+  (js/THREE.MeshPhongMaterial. 
+    (clj->js {:color 0xffffffff :shininess 100 :map src-texture})) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Take an action on a key
@@ -104,94 +100,150 @@
   (map #(rnd-rng (vmin %1) (vmax %1)) kyz ))
 
 (defn rnd-v3 [mn mx]
-  (math/mk-vec (rnd-vec mn mx [0 1 2])))
+  (apply math/mk-vec (rnd-vec mn mx [0 1 2])))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def cube-geo (THREE.CubeGeometry. 1 1 1 1 1 1))
 
-(defn copy-field-to-geo-pos! [obj geo-key]
-  (three/set-pos! (geo-key obj) (:pos obj))
-  obj)
+(defrecord CubeObject [pos vel rot rot-vel msh]
+  UpdateObject
 
-(defn mk-cube [pos]
-  (let [geo (THREE.CubeGeometry. 1 1 1 1)
-        mat three/g-material
-        msh (THREE.Mesh. geo mat)]
-    (three/set-pos! msh pos)
-    msh)) 
+  (update [_ tm]
 
-(defn cube-init [obj & rst]
-  (let [cube (mk-cube (:pos obj))]
-    (three/add cube)
-    (assoc obj
-           :cube cube
-           :rvelx (rnd-rng -0.05 0.05)
-           :rvely (rnd-rng -0.05 0.05)
-           :rvelz (rnd-rng -0.05 0.05)
-           :rot (rnd-v3 [-180 -180 -180] [180 180 180]))))
+    (let [add-scale #(math/add %1 ( math/mul-scalar 1.0 %2))
+          
+          new-vel  (obj/get-oscillate-vel pos vel math/zero 0.0005)
+          new-rot  (add-scale rot rot-vel )
+          new-pos  (add-scale pos new-vel) ]
 
-(defn cube-update! [obj tm]
-  (let [cube (:cube obj)]
-    (set! (.-x (.-rotation cube))  (+ (:rvelx obj) (.-x (.-rotation cube))))
-    (set! (.-y (.-rotation cube))  (+ (:rvely obj) (.-y (.-rotation cube))))
-    (set! (.-z (.-rotation cube))  (+ (:rvelz obj) (.-z (.-rotation cube))))
-    (-> obj
-      (obj/home! math/zero 0.0005)
-      (copy-field-to-geo-pos! :cube))))
+      (set-posrot! msh pos rot)
+      (CubeObject. new-pos new-vel new-rot rot-vel msh))
+    )
 
+  (is-dead? [_] false)
+  )
 
-(def obj-types { :cube {:init   cube-init
-                        :update cube-update!}})
+(defn mk-cube [pos material]
+  (let [msh (THREE.Mesh. (THREE.CubeGeometry. 1 1 1 1 1 1) material )]
+    (set-pos! msh pos)
+    msh))
+
+(defn mk-cube-object [material pos vel rot rot-vel ]
+  (let [cube (mk-cube pos material)]
+    (add cube)
+    (CubeObject. pos vel rot rot-vel cube)))
+
+(defn mk-random-cube-object []
+  (mk-cube-object
+   (rnd-material) 
+    (rnd-v3 [-8 -8 -2] [8 8 2])
+    (rnd-v3 [-0.05 -0.05 0.5] [0.05 0.05 -0.5])
+    (rnd-v3 [-180 -180 -180] [180 180 180])
+    (rnd-v3 [-0.05 -0.05 -0.05] [0.005 0.005 0.005])))
 
 (defn add-rnd-cube-obj! []
-  (obj/add-obj-from-typ!
-    (obj-types :cube)
-    (rnd-v3 [-8 -8 -2] [8 8 2])
-    (rnd-v3 [-0.05 -0.05 0.5] [0.05 0.05 -0.5])))
+  (obj/add-obj! (mk-random-cube-object)))
+
+(defn mk-one-cube [material]
+  (mk-cube-object
+    material
+    (rnd-v3 [-2 -2 -2] [2 2 2])
+   math/zero 
+    (math/mk-vec 0.2 0.4 0.4)
+    (math/mk-vec 0.01 0.01 -0.003)
+    ))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
 
 (def cljs-math { :abs  Math/abs
                  :sqrt Math/sqrt })
-(def test-shader
-                  { :vertexShader    "vertexShader"
-                    :fragmentShader  "fragment_shader_screen"
-                    :attributes      {}
-                    :uniforms        {:time { :type "f" :value 0.0 } }})
 
-(def map-to-shader-material
-  (comp three/mk-shader-material get-source))
+(def test-shader { :vertexShader    "vertexShader"
+                  :fragmentShader  "fragment_shader_screen"
+                  :attributes      {} })
 
 (defn mk-full-scr-renderer []
-  (let [renderer (THREE.WebGLRenderer.)
+  (let [renderer-opts {:antialias true
+                       :alpha    true 
+                       :stencil   false
+                       }
+        renderer (THREE.WebGLRenderer. (clj->js renderer-opts))
         width    (.-innerWidth js/window)
         height   (.-innerHeight js/window) ]
     (do
+      (reset! (.-autoClear renderer) false)
       (.setSize renderer width height)
       (.appendChild js/document.body (.-domElement renderer))
       {:renderer renderer :width width :height height })))
 
-(defn game-start []
-  (do
-    (math/init! cljs-math)
+(defn mk-light []
+  (let [light  (THREE.DirectionalLight. 0xffffff)
+        dir    (.normalize (THREE.Vector3. 1 1 1))]
+    (set! (.-position light) dir)
+    light))
 
+(defn create-scene []
+  (do
+    (add (THREE.AmbientLight. 0x808080))
+    (add (mk-light))
+    (dotimes [n 300]
+      (add-rnd-cube-obj!))) )
+
+(defn create-solo-scene [material]
+  (do
+    (add (THREE.AmbientLight. 0x202020))
+    (add (mk-light))
+    (obj/add-obj! (mk-one-cube material))
+    ))
+
+(defrecord RenderTarget [renderer scene cam render-target material]
+  LayerProto
+  (get-scene [_] scene)
+  
+  RenderableProto
+  (render [this]
+    (.render renderer scene cam render-target)))
+
+(defn mk-render-target [renderer width height]
+  (let [rt-opts {:format THREE.RGBFormat
+                 :stencilBuffer false}
+      
+        rt-cam   (THREE.PerspectiveCamera. 50 (/ width height) 0.1 1000)
+        rt-rt    (THREE.WebGLRenderTarget. width height (clj->js rt-opts))
+        rt-mat   (mk-shader-mat rt-rt) ]
+
+    (set-pos! rt-cam (math/mk-vec 0 0 30))
+    (RenderTarget. renderer (THREE.Scene.) rt-cam rt-rt rt-mat)) )
+
+(defn game-start []
+  (let [ch (mk-time-chan)]
+
+    (math/init! cljs-math)
     (comment listen/on-keys scr got-key!)
 
-    (let [fsrend (mk-full-scr-renderer)
-          width  (:width fsrend)
-          height (:height fsrend)
-          renderer (:renderer fsrend)
-          gs     (mk-game-screen width height) ]
+    (let [{:keys [width height renderer]} (mk-full-scr-renderer)
+          game-layer (mk-main-layer renderer width height)
+          off-scr (mk-render-target renderer 1024 1024) ]
 
-      (with-scene (get-main-scene gs)
-                  (three/add (THREE.AmbientLight. 0x202020))
-                  (dotimes [n 100]
-                    (add-rnd-cube-obj!)))
+      (with-scene (get-scene game-layer)
+                  (create-solo-scene (:material off-scr) )
+                  (dotimes [_ 40] 
+                    (obj/add-obj! (mk-one-cube (:material off-scr))))
+                  )
 
+      (with-scene (get-scene off-scr) 
+                   (create-scene))
       (go (while true
-            (let [tm (<! time-chan)]
+            (let [tm (<! ch)]
+
               (obj/update-objs! tm)
-              (render gs renderer)
+
+              (render off-scr)
+              (render game-layer)
+
               ))))))
 
 (game-start)

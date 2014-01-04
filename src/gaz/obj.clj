@@ -1,61 +1,27 @@
 (ns gaz.obj
   (:require
     [cloj.jsutil     :as jsu]
-    [gaz.math :as math ]))
+    [gaz.math2 :as math ]))
 
-(defrecord Obj [pos vel])
-
-(defn mk-obj [pos vel]
-  (Obj. pos vel))
-
-(defn is-dead? [obj]
-  (if (nil? (:dead obj))
-    false
-    (:dead obj)))
-
-(defn update [tm obj]
-  (let [ufunc (:update obj)]
-    (if ufunc (ufunc obj tm)
-      obj)))
-
-(defn add-vels [obj]
-  (assoc obj :pos (math/add
-                    (:pos obj)
-                    (:vel obj))))
+(defprotocol UpdateObject
+  (update [_ tm])
+  (vel [_])
+  (pos [_])
+  (add-vel! [_ tm])
+  (is-dead? [_]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(def objs (atom () ))
+(def objs (atom [] ))
 
 (defn add-obj! [obj]
   (swap! objs conj obj)
   obj)
 
-(defn mk-add-obj! [pos vel]
-  (add-obj! (mk-obj pos vel)))
-
-(defn lo-update-objs! [tm]
-  (swap! objs (fn [obj-list]
-                (->> obj-list 
-                  (map (comp add-vels (partial update tm) ))))))
-
 (defn update-objs! [tm]
-  (doall 
-    (lo-update-objs! tm)) )
-
-(defn- default-init [o] o)
-(defn- default-update [o t] o)
-
-;; TODO add defaul init and and update funcs
-(defn create-obj-from-typ [typ-record pos vel & rst]
-  (let [init (:init typ-record)
-        obj (assoc
-              (mk-obj pos vel)
-              :update (:update typ-record)
-              :init init)]
-    (init obj pos vel rst)))
-
-(defn add-obj-from-typ! [typ-record pos vel & rst]
-  (add-obj! (create-obj-from-typ typ-record pos vel rst)))
+  (let [out (transient [])]
+    (doseq [o @objs]
+      (conj! out (update o tm)))
+    (reset! objs (persistent! out))) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- get-oscillate-vel [pos vel origin scale]

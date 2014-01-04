@@ -1,5 +1,5 @@
 (ns gaz.testmath
-  (:require [gaz.math :as math]
+  (:require [gaz.math2 :as math]
             [gaz.util :as util]))
 
 (defn myabs [v]

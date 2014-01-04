@@ -1,5 +1,9 @@
 (ns gaz.util)
 
+
+
+
+
 (def not-nil? (comp not nil?))
 
 (defn filter-out-nil

@@ -6,7 +6,7 @@
 (def pvel 0.01)
 (def nvel (- 0 pvel))
 
-(def max-vel (math/vec3 1 1 1 ))
+(def max-vel (math/mk-vec 1 1 1 ))
 (def min-vel (math/neg max-vel))
 
 (defn clamp-vel [v-in]
@@ -20,12 +20,12 @@
                     \P :rise
                     \L :fall })
 
-(def symbol-to-vel {:left  (math/vec3 nvel 0 0)
-                    :right (math/vec3 pvel 0 0)
-                    :up    (math/vec3 0 pvel 0)
-                    :down  (math/vec3 0 nvel 0)
-                    :rise  (math/vec3 0 0 pvel)
-                    :fall  (math/vec3 0 0 nvel)})
+(def symbol-to-vel {:left  (math/mk-vec nvel 0 0)
+                    :right (math/mk-vec pvel 0 0)
+                    :up    (math/mk-vec 0 pvel 0)
+                    :down  (math/mk-vec 0 nvel 0)
+                    :rise  (math/mk-vec 0 0 pvel)
+                    :fall  (math/mk-vec 0 0 nvel)})
 
 (def key-to-vel (comp symbol-to-vel key-to-symbol))
 
