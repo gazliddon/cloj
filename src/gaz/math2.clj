@@ -7,17 +7,33 @@
 (defn dot [[x0 y0 z0] [x1 y1 z1]]
   (+ (* x0 x1) (* y0 y1) (* z0 z1) ))
 
-(defn add [[x0 y0 z0] [x1 y1 z1]]
-  (array (+ x0 x1) (+ y0 y1) (+ z0 z1) ))
+(defn add [v0 v1]
+  (array (+ (aget v0 0) (aget v1 0))
+         (+ (aget v0 1) (aget v1 1)) 
+         (+ (aget v0 2) (aget v1 2)) 
+         )
+  )
 
-(defn sub [[x0 y0 z0] [x1 y1 z1]]
-  (array (- x0 x1) (- y0 y1) (- z0 z1)))
+(defn sub [v0 v1]
+  (array (- (aget v0 0) (aget v1 0))
+         (- (aget v0 1) (aget v1 1)) 
+         (- (aget v0 2) (aget v1 2)) 
+         )
+  )
 
-(defn mul-scalar [s [x y z]]
-  (array (* s x ) (* s y ) (* s z )))
+(defn mul-scalar [s v0]
+  (array (* (aget v0 0) s)
+         (* (aget v0 1) s) 
+         (* (aget v0 2) s) 
+         )
+  )
 
-(defn div-scalar [s [x y z]]
-  (array (/ x s) (/ y s) (/ z s)))
+(defn div-scalar [s v0]
+  (array (/ s (aget v0 0) )
+         (/ s (aget v0 1) ) 
+         (/ s (aget v0 2) ) 
+         )
+  )
 
 (def zero   (array 0 0 0))
 (def x-axis (array 1 0 0))
