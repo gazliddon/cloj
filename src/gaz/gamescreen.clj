@@ -6,7 +6,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The game screen
-(defrecord GameScreen [renderer main-layer hud-layer layer-list ]
+(defrecord GameScreen [main-layer hud-layer layer-list ]
 
   RenderableProto
 
@@ -14,10 +14,10 @@
     [this] (render main-layer )))
 
 (defn mk-game-screen
-  [renderer width height]
-  (let [main-layer  (mk-main-layer renderer width height)
-        hud-layer   (comment mk-hud-layer renderer width height)]
-    (GameScreen.  renderer main-layer hud-layer [main-layer hud-layer])))
+  [width height]
+  (let [main-layer  (mk-main-layer width height)
+        hud-layer   (comment mk-hud-layer width height)]
+    (GameScreen.  main-layer hud-layer [main-layer hud-layer])))
 
 (def get-main-scene (comp get-scene :main-layer))
 (def get-hud-scene (comp get-scene :hud-layer))

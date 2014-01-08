@@ -2,8 +2,8 @@
 
   (:require
     [cloj.jsutil       :as jsu]
-    [gaz.renderable    :refer [render RenderableProto]]
-    [gaz.layer         :refer [mk-main-layer LayerProto get-scene]]
+    [gaz.renderable    :refer [render RenderableProto get-renderer]]
+    [gaz.layer         :refer [LayerProto get-scene]]
     [gaz.math2         :as math]
     [gaz.three         :refer [set-pos!]]
     ))
@@ -13,16 +13,16 @@
   (js/THREE.MeshPhongMaterial. 
     (clj->js {"color" 0xffffffff "shininess" 100 "map" src-texture})) )
 
-(defrecord RenderTarget [renderer scene cam render-target material width height]
+(defrecord RenderTarget [scene cam render-target material width height]
   LayerProto
   (get-scene [_] scene)
   (add [_ obj] (.add scene obj))
   
   RenderableProto
   (render [this]
-    (.render renderer scene cam render-target)))
+    (.render (get-renderer) scene cam render-target)))
 
-(defn mk-render-target [renderer width height]
+(defn mk-render-target [width height]
   (let [rt-opts {"format"        js/THREE.RGBFormat
                  "stencilBuffer" false}
       
@@ -31,5 +31,5 @@
         rt-mat   (mk-shader-mat rt-rt) ]
 
     (set-pos! rt-cam (math/mk-vec 0 0 30))
-    (RenderTarget. renderer (js/THREE.Scene.) rt-cam rt-rt rt-mat width height)) )
+    (RenderTarget. (js/THREE.Scene.) rt-cam rt-rt rt-mat width height)) )
 

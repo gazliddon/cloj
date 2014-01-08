@@ -14,17 +14,15 @@
 (defn mk-shader-material [shad]
   (js/THREE.ShaderMaterial. (jsu/tojs shad)))
 
-(defn mk-img-mat [img-uri]
+(comment defn mk-img-mat [img-uri]
   (js/THREE.MeshLambertMaterial.
     (js-obj
       "map" (.loadTexture js/THREE.ImageUtils img-uri))))
 
-(defn mk-t-quad []
+(comment defn mk-t-quad []
   (js/THREE.Mesh.
       (js/THREE.PlaneGeometry. 10 10)
       (mk-img-mat "feedback.jpg")))
-
-(def shit-mat (mk-img-mat "feedback.jpg"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn mk-three-vec [[x y z]] (js/THREE.Vector3. x y z))

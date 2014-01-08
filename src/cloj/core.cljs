@@ -1,27 +1,35 @@
 (ns cloj.core
   (:require-macros
-    [cljs.core.async.macros  :refer [go go-loop]]
-    [gaz.macros              :refer [with-scene]])
+    [cljs.core.async.macros   :refer [go go-loop]]
+    [gaz.macros               :refer [with-scene]])
 
   (:require
-    [goog.dom          :as dom]
-    [cljs.core.async   :as ca :refer [chan <! >! put!]]
-    [gaz.system        :as sys]
-    [cloj.jsutil       :as jsu]
-    [cloj.timechan     :refer  [mk-time-chan]]
-    [gaz.world         :as world]
-    [gaz.feedback      :refer [mk-feedback]]
+    [goog.dom                 :as dom]
+    [cljs.core.async          :as ca :refer [chan <! >! put!]]
+    [gaz.system               :as sys]
+    [cloj.jsutil              :as jsu]
+    [cloj.timechan            :refer [mk-time-chan]]
+    [gaz.feedback             :refer [mk-feedback]]
 
-    [gaz.renderable    :refer [render RenderableProto]]
-    [gaz.layer         :refer [mk-main-layer LayerProto get-scene]]
+    [gaz.renderable           :refer [render
+                                      RenderableProto
+                                      set-renderer!
+                                      get-renderer]]
 
-    [gaz.rendertarget :refer [RenderTarget mk-render-target]]
-    [gaz.three         :refer [add set-pos! rnd-material set-rot! set-posrot! ]]
-    [gaz.keys          :as gkeys]
-    [gaz.cam           :as cam]
-    [gaz.math2         :as math]
-    [gaz.obj           :as obj :refer [UpdateObject]]
-    [gaz.control       :as control]))
+    [gaz.layer                :refer [mk-main-layer LayerProto get-scene]]
+
+    [gaz.rendertarget         :refer [RenderTarget
+                                      mk-render-target]]
+
+    [gaz.three                :refer [add set-pos!
+                                      rnd-material
+                                      set-rot!
+                                      set-posrot! ]]
+    [gaz.keys                 :as gkeys]
+    [gaz.math2                :as math]
+    [gaz.rand                 :refer [rnd-v3]]
+    [gaz.obj                  :as obj :refer [UpdateObject]]
+    [gaz.control              :as control]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn func-on-vals [mp func & kyz]
@@ -35,22 +43,9 @@
 
 (def scr (dom/getElement "scr"))
 
-(def shader-mat-base {"vertexShader" "vertexShader"
-                      "fragmentShader" "fragment_shader_screen"
-                      "uniforms" {"prevScreen"
-                                 {"type" "t" "value" nil} }})
-(defn mk-shader-mat' [src-texture]
-  (let [hsh (assoc
-              shader-mat-base
-              "uniforms" {"prevScreen"
-                        { "type" "t" "value" src-texture}}) ]
-
-    (js/THREE.ShaderMaterial. (clj->js (get-source hsh)))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Take an action on a key
 ;; Should really just xform it into a platform neutral message and send on
-
 (defn got-key! [e]
   (let [etype  (.-type e)
         keyfun (partial gkeys/new-state! (char (.-keyCode e)))
@@ -77,22 +72,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn cam-func
   "update the camera from the keys!"
-  [^C/Cam cam]
-  (let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
+  [ cam]
+  (comment let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
     (cam/update (assoc cam :vel nv))))
 
-(defn update-func [cam]
-  (do
-    (obj/update-objs! 0)
-    (cam-func cam)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn rnd-rng [lo hi] (+ lo (rand (- hi lo))))
-(defn rnd-norm [] (rnd-rng -0.5 0.5))
-(defn rnd-vec [vmin vmax kyz]
-  (map #(rnd-rng (vmin %1) (vmax %1)) kyz ))
-(defn rnd-v3 [mn mx]
-  (apply math/mk-vec (rnd-vec mn mx [0 1 2])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
@@ -143,7 +127,6 @@
     (math/mk-vec 0.2 0.4 0.4)
     (math/mk-vec 0.01 0.01 -0.003)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
 
@@ -151,11 +134,11 @@
                  :sqrt Math/sqrt })
 
 (defn mk-full-scr-renderer []
-  (let [renderer-opts {"antialias" true
-                       "alpha"     true
-                       "stencil"   false }
+  (let [render-opts {"antialias" false
+                     "alpha"     false
+                     "stencil"   false }
 
-        renderer (js/THREE.WebGLRenderer. (clj->js renderer-opts))
+        renderer (js/THREE.WebGLRenderer. (clj->js render-opts))
         width    (.-innerWidth js/window)
         height   (.-innerHeight js/window) ]
     (do
@@ -170,6 +153,7 @@
     (set! (.-position light) dir)
     light))
 
+
 (defn game-start []
   (let [ch (mk-time-chan)]
 
@@ -177,16 +161,18 @@
     (comment listen/on-keys scr got-key!)
 
 
-    (let [{:keys [width height renderer]} (mk-full-scr-renderer)
-          game-layer  (mk-main-layer renderer width height)
-          off-scr     (mk-render-target renderer 512 512) ]
 
-      (jsu/log (mk-feedback renderer 512 512))
+    (let [{:keys [width height renderer]} (mk-full-scr-renderer)
+          game-layer  (mk-main-layer width height)
+          off-scr     (mk-render-target 512 512) ]
+
+      (set-renderer! renderer)
+      (jsu/log (get-renderer))
 
       (with-scene (get-scene game-layer)
                   (add (js/THREE.AmbientLight. 0x808080))
                   (add (mk-light))
-                  (dotimes [_ 1]
+                  (dotimes [_ 3]
                     (obj/add-obj! (mk-one-cube (:material off-scr)))))
 
       (with-scene (get-scene off-scr)

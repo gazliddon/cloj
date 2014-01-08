@@ -23,6 +23,10 @@
       (conj! out (update o tm)))
     (reset! objs (persistent! out))) )
 
+(defn update-objs! [tm]
+  (dorun 
+    (reset! objs (map #(update %1 tm) @objs))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- get-oscillate-vel [pos vel origin scale]
   (->> pos
