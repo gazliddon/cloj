@@ -78,6 +78,7 @@
 
 
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
 
@@ -86,14 +87,14 @@
 
   (update [_ tm]
 
-    (let [add-scale #(math/add %1 ( math/mul-scalar 1.0 %2))
-
+    (let [scaled-rot-vel (math/mul-scalar 1.0 rot-vel)
           new-vel  (obj/get-oscillate-vel pos vel math/zero 0.0005)
-          new-rot  (add-scale rot rot-vel )
-          new-pos  (add-scale pos new-vel) ]
+          scaled-new-vel (math/mul-scalar 1.0 new-vel)  ]
 
+      (math/add! pos scaled-new-vel)
+      (math/add! rot scaled-rot-vel)
       (set-posrot! msh pos rot)
-      (CubeObject. new-pos new-vel new-rot rot-vel msh))
+      (CubeObject. pos new-vel rot rot-vel msh))
     )
 
   (is-dead? [_] false))
@@ -108,6 +109,7 @@
     (add cube)
     (CubeObject. pos vel rot rot-vel cube)))
 
+
 (defn mk-random-cube-object []
   (mk-cube-object
    (rnd-material)
@@ -120,12 +122,12 @@
   (obj/add-obj! (mk-random-cube-object)))
 
 (defn mk-one-cube [material]
-  (mk-cube-object
-    material
-    (rnd-v3 [-2 -2 -2] [2 2 2])
-    math/zero
-    (math/mk-vec 0.2 0.4 0.4)
-    (math/mk-vec 0.01 0.01 -0.003)))
+  (let [cb (mk-random-cube-object)
+        msh (:msh cb)]
+    (aset (:msh cb) "material" material)
+    (math/mul-scalar! 0.01 (:pos cb) )
+    (math/mul-scalar! 0.1 (:rot-vel cb))
+    cb) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
@@ -134,11 +136,13 @@
                  :sqrt Math/sqrt })
 
 (defn mk-full-scr-renderer []
-  (let [render-opts {"antialias" false
-                     "alpha"     false
-                     "stencil"   false }
+  (let [
+        render-opts (js-obj
+                      "antialias" false
+                      "alpha" false
+                      "stencil" false)
 
-        renderer (js/THREE.WebGLRenderer. (clj->js render-opts))
+        renderer (js/THREE.WebGLRenderer. render-opts)
         width    (.-innerWidth js/window)
         height   (.-innerHeight js/window) ]
     (do
@@ -160,11 +164,9 @@
     (math/init! cljs-math)
     (comment listen/on-keys scr got-key!)
 
-
-
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           game-layer  (mk-main-layer width height)
-          off-scr     (mk-render-target 512 512) ]
+          off-scr     (mk-render-target 1024 1024) ]
 
       (set-renderer! renderer)
       (jsu/log (get-renderer))
@@ -172,7 +174,7 @@
       (with-scene (get-scene game-layer)
                   (add (js/THREE.AmbientLight. 0x808080))
                   (add (mk-light))
-                  (dotimes [_ 3]
+                  (dotimes [_ 30]
                     (obj/add-obj! (mk-one-cube (:material off-scr)))))
 
       (with-scene (get-scene off-scr)

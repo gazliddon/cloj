@@ -34,6 +34,12 @@
     (math/mul-scalar scale)
     (math/add vel)))
 
+(defn- get-oscillate-vel [pos vel origin scale]
+  (let [ret (math/sub origin pos)]
+   (math/mul-scalar! scale ret)
+   (math/add! ret vel) 
+    ret ))
+
 (defn home! [homer home-pos scale]
   (assoc homer :vel (get-oscillate-vel
                       (:pos homer)

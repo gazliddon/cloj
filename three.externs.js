@@ -670,6 +670,13 @@ THREE.Vector3.prototype.toArray = function(){};
 */
 THREE.Vector3.prototype.clone = function(){};
 
+
+
+/**
+@param {Array.<number>} a
+*/
+THREE.Vector3.prototype.fromArray = function(a){};
+
 // ============================================================================
 // THREE.Vector2
 // ============================================================================

@@ -1,4 +1,4 @@
-;; Adapter that takes an input of current time
+k; Adapter that takes an input of current time
 ;; and spits out an event with the the delta time between the last two frames
 
 (ns gaz.frame

@@ -10,23 +10,17 @@
 (defn add [v0 v1]
   (array (+ (aget v0 0) (aget v1 0))
          (+ (aget v0 1) (aget v1 1)) 
-         (+ (aget v0 2) (aget v1 2)) 
-         )
-  )
+         (+ (aget v0 2) (aget v1 2)) ))
 
 (defn sub [v0 v1]
   (array (- (aget v0 0) (aget v1 0))
          (- (aget v0 1) (aget v1 1)) 
-         (- (aget v0 2) (aget v1 2)) 
-         )
-  )
+         (- (aget v0 2) (aget v1 2)) ))
 
 (defn mul-scalar [s v0]
   (array (* (aget v0 0) s)
          (* (aget v0 1) s) 
-         (* (aget v0 2) s) 
-         )
-  )
+         (* (aget v0 2) s) ))
 
 (defn div-scalar [s v0]
   (array (/ s (aget v0 0) )
@@ -35,6 +29,40 @@
          )
   )
 
+(defn add! [dest add]
+  (aset dest 0 (+ (aget dest 0) (aget add 0)))
+  (aset dest 1 (+ (aget dest 1) (aget add 1)))
+  (aset dest 2 (+ (aget dest 2) (aget add 2)))
+  dest)
+
+(defn sub! [dest sub]
+  (aset dest 0 (- (aget dest 0) (aget sub 0)))
+  (aset dest 1 (- (aget dest 1) (aget sub 1)))
+  (aset dest 2 (- (aget dest 2) (aget sub 2)))
+  dest)
+
+(defn mul-scalar! [s dest]
+  (aset dest 0 (* (aget dest 0) s))
+  (aset dest 1 (* (aget dest 1) s)) 
+  (aset dest 2 (* (aget dest 2) s))
+  dest)
+
+(defn div-scalar! [s dest]
+  (aset dest 0 (/ (aget dest 0) s))
+  (aset dest 1 (/ (aget dest 1) s)) 
+  (aset dest 2 (/ (aget dest 2) s))
+  dest)
+
+(defn copy! [dest src]
+  (aset dest 0 (aget src 0))
+  (aset dest 1 (aget src 1))
+  (aset dest 2 (aget src 2))
+  dest)
+
+(defn mk-copy [src]
+  (copy! (array ) src))
+
+
 (def zero   (array 0 0 0))
 (def x-axis (array 1 0 0))
 (def y-axis (array 0 1 0))
@@ -42,7 +70,7 @@
 
 (defn neg [v0] (sub zero v0))
 (defn length-squared  [v] (dot v v))
-(defn length  [v] (sqrt ( length-squared v)))
+(defn length  [v] (Math/sqrt ( length-squared v)))
 (defn unit-vector [v] (div-scalar (length v) v))
 
 ;; Clamping stuff

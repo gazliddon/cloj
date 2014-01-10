@@ -21,16 +21,8 @@
 
 (def get-main-scene (comp get-scene :main-layer))
 (def get-hud-scene (comp get-scene :hud-layer))
-
 (def get-main-cam (comp get-cam :main-layer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;ends
-
-
-
-
-
-
-
 
