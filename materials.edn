@@ -1,8 +1,0 @@
-{
-    :materials {
-        :red-flat {:material :fong
-        :color 0xff0000
-        :shininess 100
-        }
-    }
-}
