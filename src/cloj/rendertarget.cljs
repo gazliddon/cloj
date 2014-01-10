@@ -4,7 +4,7 @@
     [cloj.jsutil       :as jsu]
     [gaz.renderable    :refer [render RenderableProto get-renderer]]
     [gaz.layer         :refer [LayerProto get-scene]]
-    [gaz.math2         :as math]
+    [gaz.math          :as math]
     [gaz.three         :refer [set-pos!]]
     ))
 

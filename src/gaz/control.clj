@@ -1,7 +1,7 @@
 (ns gaz.control
   (:require 
     [gaz.util :as util]
-    [gaz.math :as math ]))
+    [gaz.math  :as math ]))
 
 (def pvel 0.01)
 (def nvel (- 0 pvel))

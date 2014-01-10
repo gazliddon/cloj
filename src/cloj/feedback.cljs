@@ -10,7 +10,7 @@
     [gaz.layer         :as layer
                        :refer [LayerProto get-scene]]
 
-    [gaz.math2         :as math]
+    [gaz.math          :as math]
     [gaz.three         :refer [set-pos!]]
     [gaz.rendertarget  :refer [mk-render-target]]
     ))

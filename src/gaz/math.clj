@@ -1,63 +1,77 @@
-(ns gaz.math
-  (:require [gaz.util :refer [update-map]]))
+(ns gaz.math)
 
-(defn- default-abs [v]
-  (if (< v 0)
-    (- 0 v)
-    v))
-
-(defn- default-sqrt [v]
-   0)
-
-(def math-atom (atom { :abs  default-abs
-                       :sqrt default-sqrt }))
-
-(defn init!
-  "Initialise math module with defs for routines needed
-   Works with cljs and clj where abs / sqrt and a few
-   other things aren't the same"
-  
-  [mth] (do 
-          (swap! math-atom update-map mth)
-          @math-atom))
-
-
-(defrecord Vec3 [^double x ^double y ^double z])
-
+(defn init! [v])
 (defn mk-vec
-  ([[x y z]] (Vec3. (double x) (double y) (double z)))
-  ([x y z] (Vec3. (double x) (double y) (double z)))
+  ([x y z] (array x y z)))
+
+(defn dot [[x0 y0 z0] [x1 y1 z1]]
+  (+ (* x0 x1) (* y0 y1) (* z0 z1) ))
+
+(defn add [v0 v1]
+  (array (+ (aget v0 0) (aget v1 0))
+         (+ (aget v0 1) (aget v1 1)) 
+         (+ (aget v0 2) (aget v1 2)) ))
+
+(defn sub [v0 v1]
+  (array (- (aget v0 0) (aget v1 0))
+         (- (aget v0 1) (aget v1 1)) 
+         (- (aget v0 2) (aget v1 2)) ))
+
+(defn mul-scalar [s v0]
+  (array (* (aget v0 0) s)
+         (* (aget v0 1) s) 
+         (* (aget v0 2) s) ))
+
+(defn div-scalar [s v0]
+  (array (/ s (aget v0 0) )
+         (/ s (aget v0 1) ) 
+         (/ s (aget v0 2) ) 
+         )
   )
 
-(defn abs [v] ( (:abs @math-atom) v))
-(defn sqrt [v] ( (:sqrt @math-atom) v))
+(defn add! [dest add]
+  (aset dest 0 (+ (aget dest 0) (aget add 0)))
+  (aset dest 1 (+ (aget dest 1) (aget add 1)))
+  (aset dest 2 (+ (aget dest 2) (aget add 2)))
+  dest)
 
-(defn dot ^double [^Vec3 v0 ^Vec3 v1]
-  (+ (*(:x v0)(:x v1)) (*(:y v0)(:y v1)) (*(:z v0) (:z v1))))
+(defn sub! [dest sub]
+  (aset dest 0 (- (aget dest 0) (aget sub 0)))
+  (aset dest 1 (- (aget dest 1) (aget sub 1)))
+  (aset dest 2 (- (aget dest 2) (aget sub 2)))
+  dest)
 
-(defn applyf ^Vec3 [^Vec3 v0 f]
-  (mk-vec (f (:x v0)) (f (:y v0)) (f (:z v0))))
+(defn mul-scalar! [s dest]
+  (aset dest 0 (* (aget dest 0) s))
+  (aset dest 1 (* (aget dest 1) s)) 
+  (aset dest 2 (* (aget dest 2) s))
+  dest)
 
-(defn applyvf ^Vec3 [^Vec3 v0 ^Vec3 v1 f]
-  (mk-vec (f (:x v0) (:x v1)) (f (:y v0)(:y v1)) (f (:z v0)(:z v1))))
+(defn div-scalar! [s dest]
+  (aset dest 0 (/ (aget dest 0) s))
+  (aset dest 1 (/ (aget dest 1) s)) 
+  (aset dest 2 (/ (aget dest 2) s))
+  dest)
 
-(defn mul ^Vec3 [^Vec3 v0 ^Vec3 v1] (applyvf v0 v1 * ))
-(defn sub ^Vec3 [^Vec3 v0 ^Vec3 v1] (applyvf v0 v1 - ))
-(defn add ^Vec3 [^Vec3 v0 ^Vec3 v1] (applyvf v0 v1 + ))
+(defn copy! [dest src]
+  (aset dest 0 (aget src 0))
+  (aset dest 1 (aget src 1))
+  (aset dest 2 (aget src 2))
+  dest)
 
-(defn mul-scalar ^Vec3 [s0 ^Vec3 v0] (applyf v0 (partial * s0) ))
-(defn div-scalar ^Vec3 [s0 ^Vec3 v0] (applyf v0 (partial * (/ 1.0 s0)) ))
+(defn mk-copy [src]
+  (copy! (array ) src))
 
-(def zero   ^Vec3 (Vec3. 0 0 0))
-(def x-axis ^Vec3 (Vec3. 1 0 0))
-(def y-axis ^Vec3 (Vec3. 0 1 0))
-(def z-axis ^Vec3 (Vec3. 0 0 1))
 
-(defn neg ^Vec3 [^Vec3 v0] (sub zero v0))
+(def zero   (array 0 0 0))
+(def x-axis (array 1 0 0))
+(def y-axis (array 0 1 0))
+(def z-axis (array 0 0 1))
 
-(defn length-squared ^double [v] (dot v v))
-(defn length ^double [v] (sqrt ( length-squared v)))
-(defn unit-vector ^Vec3 [^Vec3 v] (div-scalar (length v) v))
+(defn neg [v0] (sub zero v0))
+(defn length-squared  [v] (dot v v))
+(defn length  [v] (Math/sqrt ( length-squared v)))
+(defn unit-vector [v] (div-scalar (length v) v))
 
 ;; Clamping stuff
 (defn- clamp-s
@@ -65,13 +79,10 @@
   [s-in s-min s-max]
   (min s-max (max s-in s-min)))
 
-(defn- clamp-id 
-  "Clamp the id f in these records"
-  [r-in r-min r-max f]  (clamp-s (f r-in) (f r-min) (f r-max)))
-
-(defn ^Vec3 clamp [^Vec3 v-in ^Vec3 v-min ^Vec3 v-max]
-  (let [clamper (partial clamp-id v-in v-min v-max)]
-    (mk-vec (clamper :x) (clamper :y) (clamper :z))))
+(defn clamp [[x y z] [min-x min-y min-z] [max-x max-y max-z]]
+  (array (clamp-s x min-x max-x)
+         (clamp-s y min-y max-y)
+         (clamp-s z min-z max-z)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def epsilon 2.220460492503130808472633361816E-16)
@@ -109,7 +120,41 @@
 (defn ray-intersection-with-plane [ray plane]
   (let [{:keys [pos dir]} ray]
     (sub pos (mul-scalar (ray-distance-to-plane ray plane) dir ))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(comment 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ends
+  ;; This was faster than maps but still created
+  ;; a persistent vector for each vec3
+
+  (ns gaz.math)
+
+  (defn init! [v])
+  (defn mk-vec
+    ([x y z] [x y z]))
+
+  (defn dot [v0 v1]
+    (let [[x0 y0 z0] v0
+          [x1 y1 z1] v1]
+      (+ (* x0 x1) (* y0 y1) (* z0 z1) )))
+
+  (defn add [v0 v1]
+    (let [[x0 y0 z0] v0
+          [x1 y1 z1] v1]
+      [(+ x0 x1) (+ y0 y1) (+ z0 z1)] ))
+
+  (defn sub [v0 v1]
+    (let [[x0 y0 z0] v0
+          [x1 y1 z1] v1]
+      [ (- x0 x1) (- y0 y1) (- z0 z1)]))
+
+  (defn mul-scalar [s v0]
+    (let [[x0 y0 z0] v0 ]
+      [ (* s x0 ) (* s y0 ) (* s z0 )]))
+
+  (defn div-scalar [s v0]
+    (let [[x0 y0 z0] v0 ]
+      [ (/ x0 s) (/ y0 s) (/ z0 s)]))
+  
+  )
+
 

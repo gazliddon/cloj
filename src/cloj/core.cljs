@@ -26,7 +26,7 @@
                                       set-rot!
                                       set-posrot! ]]
     [gaz.keys                 :as gkeys]
-    [gaz.math2                :as math]
+    [gaz.math                 :as math]
     [gaz.rand                 :refer [rnd-v3]]
     [gaz.obj                  :as obj :refer [UpdateObject]]
     [gaz.control              :as control]))
