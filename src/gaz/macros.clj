@@ -5,5 +5,5 @@
     ~@body))
 
 (defmacro with-rt [rt & body]
-  `(binding [~'gaz.layer/*current-rt*  ~rt]
+  `(binding [~'gaz.rendertarget/*current-rt*  ~rt]
      ~@body))

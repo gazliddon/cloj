@@ -1,18 +1,18 @@
 (ns gaz.feedback
 
-(:require-macros
+  (:require-macros
     [gaz.macros              :refer [with-scene with-rt]])
 
   (:require
     [cloj.jsutil       :as jsu]
     [gaz.renderable    :refer [RenderableProto render]]
-    
+
     [gaz.layer         :as layer
-                       :refer [LayerProto get-scene]]
+     :refer [LayerProto get-scene]]
 
     [gaz.math          :as math]
     [gaz.three         :refer [set-pos!]]
-    [gaz.rendertarget  :refer [mk-render-target]]
+    [gaz.rendertarget  :as rt :refer [mk-render-target]]
     ))
 
 (defrecord FeedbackTarget [front-render-target back-render-target ]
@@ -37,7 +37,7 @@
         front (mk-render-target width height)
         back  (mk-render-target width height) ]
 
-    (set-pos! cam (math/mk-vec 0 0 1))
+    (set-pos! cam (array  0 0 1))
     (add-plane-obj! front back)
     (add-plane-obj! back front)
 

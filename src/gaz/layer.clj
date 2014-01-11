@@ -1,15 +1,13 @@
 (ns gaz.layer
   (:require
+    [gaz.layerproto :refer [LayerProto]]
+    [gaz.rendertarget :as rt]
     [gaz.renderable :refer [RenderableProto get-renderer]]))
 
-(def ^:dynamic *current-rt* nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Layer proto and game and hud layers
-(defprotocol LayerProto
-  (get-scene [this])
-  (get-cam [this])
-  (add [this obj]))
+
 
 (defrecord Layer [scene cam]
 
@@ -22,10 +20,11 @@
 
   RenderableProto
   (render [this ]
-    (let [r (get-renderer)] 
-      (if (nil? *current-rt*)
+    (let [r       (get-renderer)
+          rtarget  rt/*current-rt*] 
+      (if (nil? rtarget)
         (.render r scene cam)
-        (.render r scene cam *current-rt*)))))
+        (.render r scene cam rtarget)))))
 
 (defn- aspect [width height] (/ width height))
 

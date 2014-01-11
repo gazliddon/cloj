@@ -1,7 +1,7 @@
 (ns cloj.core
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
-    [gaz.macros               :refer [with-scene]])
+    [gaz.macros               :refer [with-scene with-rt]])
 
   (:require
     [goog.dom                 :as dom]
@@ -16,7 +16,8 @@
                                       set-renderer!
                                       get-renderer]]
 
-    [gaz.layer                :refer [mk-main-layer LayerProto get-scene]]
+    [gaz.layer                :refer [mk-main-layer ]]
+    [gaz.layerproto           :refer [get-scene]]
 
     [gaz.rendertarget         :refer [RenderTarget
                                       mk-render-target]]
@@ -169,7 +170,6 @@
           off-scr     (mk-render-target 1024 1024) ]
 
       (set-renderer! renderer)
-      (jsu/log (get-renderer))
 
       (with-scene (get-scene game-layer)
                   (add (js/THREE.AmbientLight. 0x808080))
