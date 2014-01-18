@@ -1,7 +1,4 @@
 (ns cloj.core
-  (:require-macros
-    [cljs.core.async.macros   :refer [go go-loop]]
-    [gaz.macros               :refer [with-scene with-rt]])
 
   (:require
     [goog.dom                 :as dom]
@@ -16,11 +13,13 @@
                                       set-renderer!
                                       get-renderer]]
 
-    [gaz.layer                :refer [mk-main-layer ]]
+    [gaz.layer                :refer [mk-perspective-layer ]]
     [gaz.layerproto           :refer [get-scene]]
 
-    [gaz.rendertarget         :refer [RenderTarget
-                                      mk-render-target]]
+    [gaz.rendertarget         :as rt
+     :refer [RenderTarget
+             mk-render-target
+             get-current-render-target]]
 
     [gaz.three                :refer [add set-pos!
                                       rnd-material
@@ -30,7 +29,12 @@
     [gaz.math                 :as math]
     [gaz.rand                 :refer [rnd-v3]]
     [gaz.obj                  :as obj :refer [UpdateObject]]
-    [gaz.control              :as control]))
+    [gaz.control              :as control])
+  (:require-macros
+    [cljs.core.async.macros   :refer [go go-loop]]
+    [gaz.rendertarget         :refer [with-rt]]
+    [gaz.macros               :refer [with-scene ]])
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn func-on-vals [mp func & kyz]
@@ -76,9 +80,6 @@
   [ cam]
   (comment let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
     (cam/update (assoc cam :vel nv))))
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
@@ -158,6 +159,25 @@
     (set! (.-position light) dir)
     light))
 
+(defn test-with-rt []
+  (do
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (jsu/log "Current render target")
+    (jsu/log (get-current-render-target))
+
+
+    (jsu/log "About to to with-rt")
+    (with-rt "hello"
+             (jsu/log "with rt")
+             (jsu/log (get-current-render-target))
+             )
+
+    (jsu/log "out theother side"
+             )
+
+    (jsu/log (get-current-render-target))
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ))
 
 (defn game-start []
   (let [ch (mk-time-chan)]
@@ -166,18 +186,20 @@
     (comment listen/on-keys scr got-key!)
 
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
-          game-layer  (mk-main-layer width height)
-          off-scr     (mk-render-target 1024 1024) ]
+          [os-width os-height]  [1024 1024]
+          game-layer            (mk-perspective-layer width height 25 (array 0 0 8))
+          off-scr               (mk-render-target os-width os-height)
+          off-scr-layer         (mk-perspective-layer os-width os-height 45 (array 0 0 29))]
 
       (set-renderer! renderer)
 
       (with-scene (get-scene game-layer)
                   (add (js/THREE.AmbientLight. 0x808080))
                   (add (mk-light))
-                  (dotimes [_ 30]
+                  (dotimes [_ 1]
                     (obj/add-obj! (mk-one-cube (:material off-scr)))))
 
-      (with-scene (get-scene off-scr)
+      (with-scene (get-scene off-scr-layer)
                   (add (js/THREE.AmbientLight. 0x202020))
                   (add (mk-light))
                   (dotimes [n 300]
@@ -188,8 +210,11 @@
 
               (obj/update-objs! tm)
 
-              (render off-scr)
-              (render game-layer)
+              (with-rt (:render-target off-scr )
+                       (render off-scr-layer))
+
+              (with-rt nil 
+                       (render game-layer))
 
               ))))))
 

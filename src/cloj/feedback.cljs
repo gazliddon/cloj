@@ -1,18 +1,19 @@
 (ns gaz.feedback
 
   (:require-macros
-    [gaz.macros              :refer [with-scene with-rt]])
+    [gaz.macros              :refer [with-scene ]]
+    [gaz.rendertarget :refer [with-rt]])
 
   (:require
     [cloj.jsutil       :as jsu]
     [gaz.renderable    :refer [RenderableProto render]]
+    [gaz.layerproto    :refer [LayerProto]]
 
-    [gaz.layer         :as layer
-     :refer [LayerProto get-scene]]
+    [gaz.layer         :as layer :refer [get-scene]]
 
     [gaz.math          :as math]
     [gaz.three         :refer [set-pos!]]
-    [gaz.rendertarget  :as rt :refer [mk-render-target]]
+    [gaz.rendertarget  :as rt :refer [mk-render-target ]]
     ))
 
 (defrecord FeedbackTarget [front-render-target back-render-target ]

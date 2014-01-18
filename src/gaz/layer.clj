@@ -1,14 +1,14 @@
 (ns gaz.layer
   (:require
     [gaz.layerproto :refer [LayerProto]]
-    [gaz.rendertarget :as rt]
+    [gaz.three :refer [set-pos!]]
+    [cloj.jsutil :as jsu]
+    [gaz.rendertarget :refer [get-current-render-target]]
     [gaz.renderable :refer [RenderableProto get-renderer]]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Layer proto and game and hud layers
-
-
 (defrecord Layer [scene cam]
 
   LayerProto
@@ -20,24 +20,17 @@
 
   RenderableProto
   (render [this ]
-    (let [r       (get-renderer)
-          rtarget  rt/*current-rt*] 
+    (let [r        (get-renderer)
+          rtarget  (get-current-render-target)]
       (if (nil? rtarget)
-        (.render r scene cam)
-        (.render r scene cam rtarget)))))
+        (do
+          (.render r scene cam))
+        (do 
+          (.render r scene cam rtarget)))
+      )))
 
-(defn- aspect [width height] (/ width height))
-
-(defn mk-main-layer [width height]
-  (let [cam (js/THREE.PerspectiveCamera. 25 (aspect width height) 0.1 1000)]
-  (set! (.-position cam) (js/THREE.Vector3. 0 0 5))
-    (Layer. (js/THREE.Scene.) cam )))
-
-(defn mk-hud-layer [width height]
-  (let [ half-ar (/ (aspect width height) 2.0)
-        cam     (js/THREE.OrthographicCamera.
-                  (- half-ar) half-ar 0.5 -0.5
-                  0.1 1000) ]
-
-    (Layer. (js/THREE.Scene.) cam))) 
+(defn mk-perspective-layer [width height fov pos]
+  (let [cam (js/THREE.PerspectiveCamera. fov (/ width height) 0.1 10000)]
+    (set-pos! cam pos)
+    (Layer. (js/THREE.Scene.) cam)))
 

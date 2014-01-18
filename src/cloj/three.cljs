@@ -1,5 +1,5 @@
 (ns gaz.three
-  (:require-macros [gaz.macros :refer [with-scene]])
+  (:require-macros [gaz.macros :refer [with-scene ]])
   (:require
     [cloj.jsutil :as jsu ]
     ))
