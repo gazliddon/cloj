@@ -3,7 +3,7 @@
     [gaz.layerproto :refer [LayerProto]]
     [gaz.three :refer [set-pos!]]
     [cloj.jsutil :as jsu]
-    [gaz.rendertarget :refer [get-current-render-target]]
+    [gaz.rendertarget :refer [*current-rt*]]
     [gaz.renderable :refer [RenderableProto get-renderer]]))
 
 
@@ -21,12 +21,12 @@
   RenderableProto
   (render [this ]
     (let [r        (get-renderer)
-          rtarget  (get-current-render-target)]
-      (if (nil? rtarget)
+          ]
+      (if (nil? *current-rt*)
         (do
           (.render r scene cam))
         (do 
-          (.render r scene cam rtarget)))
+          (.render r scene cam *current-rt*)))
       )))
 
 (defn mk-perspective-layer [width height fov pos]

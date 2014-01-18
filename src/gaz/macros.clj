@@ -7,6 +7,6 @@
 (ns gaz.rendertarget)
 
 (defmacro with-rt [rt & body]
- `(binding [*current-rt* ~rt]=
+ `(binding [*current-rt* ~rt]
     ~@body))
 

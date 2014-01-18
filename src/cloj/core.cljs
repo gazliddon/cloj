@@ -167,16 +167,30 @@
 
 
     (jsu/log "About to to with-rt")
+
     (with-rt "hello"
              (jsu/log "with rt")
              (jsu/log (get-current-render-target))
              )
 
-    (jsu/log "out theother side"
-             )
+    (jsu/log "out theother side")
 
     (jsu/log (get-current-render-target))
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ))
+
+
+(defn rt [msg]
+  (do
+    (jsu/log msg)
+    (jsu/log (get-current-render-target))) )
+
+(defn do-render! [game-layer off-scr-layer offscr-rt]
+  (do
+    (with-rt offscr-rt
+             (render off-scr-layer))
+    (render game-layer)
+
     ))
 
 (defn game-start []
@@ -202,21 +216,15 @@
       (with-scene (get-scene off-scr-layer)
                   (add (js/THREE.AmbientLight. 0x202020))
                   (add (mk-light))
-                  (dotimes [n 300]
+                  (dotimes [_ 300]
                     (add-rnd-cube-obj!)) )
 
-      (go (while true
-            (let [tm (<! ch)]
+      (go 
+        (loop [tm 0 ]
+          (obj/update-objs! tm)
+          (do-render! game-layer off-scr-layer (:render-target off-scr))
 
-              (obj/update-objs! tm)
-
-              (with-rt (:render-target off-scr )
-                       (render off-scr-layer))
-
-              (with-rt nil 
-                       (render game-layer))
-
-              ))))))
+          (recur (<! ch)))))))
 
 (game-start)
 
