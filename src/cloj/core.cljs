@@ -1,6 +1,9 @@
 (ns cloj.core
 
   (:require
+
+    [gaz.lines                :as lines]
+
     [goog.dom                 :as dom]
     [cljs.core.async          :as ca :refer [chan <! >! put!]]
     [gaz.system               :as sys]
@@ -13,13 +16,12 @@
                                       set-renderer!
                                       get-renderer]]
 
-    [gaz.layer                :refer [mk-perspective-layer ]]
-    [gaz.layerproto           :refer [get-scene]]
+    [gaz.layer                :as layer ]
+    [gaz.layerproto           :refer [get-scene get-cam]]
 
-    [gaz.rendertarget         :as rt
-     :refer [RenderTarget
-             mk-render-target
-             get-current-render-target]]
+    [gaz.rendertarget         :as rt :refer [RenderTarget
+                                             mk-render-target
+                                             get-current-render-target]]
 
     [gaz.three                :refer [add set-pos!
                                       rnd-material
@@ -30,6 +32,7 @@
     [gaz.rand                 :refer [rnd-v3]]
     [gaz.obj                  :as obj :refer [UpdateObject]]
     [gaz.control              :as control])
+
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
     [gaz.rendertarget         :refer [with-rt]]
@@ -159,36 +162,41 @@
     (set! (.-position light) dir)
     light))
 
-(defn test-with-rt []
-  (do
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    (jsu/log "Current render target")
-    (jsu/log (get-current-render-target))
+(def test-lines [
+                 [0xff0000 [[0 0 0]
+                              [0 10 0]
+                              ]]
 
+                 [0x00ff00 [[0 0 0]
+                              [0 -10 0]
+                              ]]
 
-    (jsu/log "About to to with-rt")
+                 [0x0000ff [[0 -10 0]
+                              [0 3 0]
+                              ]]
+                 ])
 
-    (with-rt "hello"
-             (jsu/log "with rt")
-             (jsu/log (get-current-render-target))
-             )
+(defn log [& rst]
+  (let [logger (fn [txt] (.log js/console txt))]
+    (doseq [t rst]
+      (logger t))))
 
-    (jsu/log "out theother side")
-
-    (jsu/log (get-current-render-target))
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ))
-
-
-(defn rt [msg]
-  (do
-    (jsu/log msg)
-    (jsu/log (get-current-render-target))) )
+(defn render-scene-to-layer [this-layer scene]
+  (layer/render-with-current-rt scene (get-cam this-layer) ))
 
 (defn do-render! [game-layer off-scr-layer offscr-rt]
-  (do
+
+  (let [lines-scene (lines/lines-to-scene test-lines)
+        lines-layer (layer/Layer. lines-scene (get-cam game-layer))]
+
+    (with-scene (get-scene lines-layer)
+                  (add (js/THREE.AmbientLight. 0x202020))
+                  (add (mk-light)))
+
     (with-rt offscr-rt
              (render off-scr-layer))
+
+    (render lines-layer)
     (render game-layer)
 
     ))
@@ -199,11 +207,12 @@
     (math/init! cljs-math)
     (comment listen/on-keys scr got-key!)
 
-    (let [{:keys [width height renderer]} (mk-full-scr-renderer)
+    (let [mk-persp layer/mk-perspective-layer
+          {:keys [width height renderer]} (mk-full-scr-renderer)
           [os-width os-height]  [1024 1024]
-          game-layer            (mk-perspective-layer width height 25 (array 0 0 8))
+          game-layer            (mk-persp width height 25 (array 0 0 8))
           off-scr               (mk-render-target os-width os-height)
-          off-scr-layer         (mk-perspective-layer os-width os-height 45 (array 0 0 29))]
+          off-scr-layer         (mk-persp os-width os-height 45 (array 0 0 29))]
 
       (set-renderer! renderer)
 
@@ -222,6 +231,7 @@
       (go 
         (loop [tm 0 ]
           (obj/update-objs! tm)
+          
           (do-render! game-layer off-scr-layer (:render-target off-scr))
 
           (recur (<! ch)))))))

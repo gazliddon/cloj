@@ -6,7 +6,12 @@
     [gaz.rendertarget :refer [*current-rt*]]
     [gaz.renderable :refer [RenderableProto get-renderer]]))
 
-
+(defn render-with-current-rt [scene cam]
+  (let [r (get-renderer)]
+    (if (nil? *current-rt*)
+      (.render r scene cam)
+      (.render r scene cam *current-rt*)))
+  )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Layer proto and game and hud layers
 (defrecord Layer [scene cam]
@@ -20,17 +25,17 @@
 
   RenderableProto
   (render [this ]
-    (let [r        (get-renderer)
-          ]
-      (if (nil? *current-rt*)
-        (do
-          (.render r scene cam))
-        (do 
-          (.render r scene cam *current-rt*)))
-      )))
+    (render-with-current-rt scene cam)
+    ))
 
-(defn mk-perspective-layer [width height fov pos]
+(defn mk-perspective-cam [width height fov pos]
   (let [cam (js/THREE.PerspectiveCamera. fov (/ width height) 0.1 10000)]
     (set-pos! cam pos)
-    (Layer. (js/THREE.Scene.) cam)))
+    cam))
 
+(defn mk-perspective-layer [width height fov pos]
+  (Layer. (js/THREE.Scene.) (mk-perspective-cam width height fov pos)))
+
+
+
+;; ends

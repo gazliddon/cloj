@@ -1369,6 +1369,17 @@ THREE.DoubleSide = function(){};
 // THREE.CubeGeometry - added by GRL
 // ============================================================================
 
+
+
+/**
+@constructor
+@param {!THREE.Geometry} geometry
+@param {?THRE.Material} material
+@param {?*} type
+ */
+THREE.Line = function(geometry, material, type) {};
+
+
 /**
 @constructor
 @extends {THREE.Geometry}
@@ -1392,7 +1403,6 @@ THREE.CubeGeometry = function(width, height, depth, widthSegments, heightSegment
 */
 
 THREE.PlaneGeometry = function(width, height, widthSegments, heightSegments){};
-
 
 /**
 @constructor
@@ -1422,7 +1432,6 @@ THREE.WebGLRenderer.render = function (scene, camera) { }
 
 /** @type {!boolean} */       THREE.WebGLRenderer.prototype.autoClear;
 /** @type {*} */              THREE.WebGLRenderer.prototype.domElement;
-
 
 /** @const */
 THREE.RGBFormat = function(){};
