@@ -9,22 +9,12 @@
 (defn random-int [n]
   (bit-or (random n) 0))
 
-(defn log
-  "TODO: need to make this multi args"
-  [my-args]
-  (.log js/console my-args))
+(defn log [& rst]
+  (doseq [t rst]
+      (.log js/console t)))
 
-(defn tojs
-  "makes a javascript map from a clojure one"
-  [cljmap]
-  (let
-    [out  ( js-obj)
-     pout ( fn [k v]   ( aset out ( name k) v))
-     mapf ( fn [[k v]]
-            (if (map? v)
-              (pout k (tojs v))
-              (pout k v)))]
-    (doall (map mapf cljmap)) out))
+(defn get-prop [obj & arr]
+  (reduce #(aget %1 %2) obj arr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;ends

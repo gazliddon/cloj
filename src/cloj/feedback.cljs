@@ -7,53 +7,143 @@
   (:require
     [cloj.jsutil       :as jsu]
     [gaz.renderable    :refer [RenderableProto render]]
-    [gaz.layerproto    :refer [LayerProto]]
+    [gaz.layerproto    :refer [LayerProto add]]
 
-    [gaz.layer         :as layer :refer [get-scene]]
+    [gaz.layer         :as layer ]
 
     [gaz.math          :as math]
     [gaz.three         :refer [set-pos!]]
-    [gaz.rendertarget  :as rt :refer [mk-render-target ]]
+    [gaz.rendertarget  :as rt ]
     ))
 
-(defrecord FeedbackTarget [front-render-target back-render-target ]
+(declare flip-feedback)
 
+(defn- set-uniform [material uni val]
+  (let [prop (jsu/get-prop material "uniforms" uni)]
+    (aset prop "value" val)))
+
+(defn- set-rt-uniform [material uni rt]
+  (set-uniform material uni (:render-target rt)))
+
+(defrecord FeedbackTarget [material layer front-render-target back-render-target temp-render-target]
   RenderableProto
 
   (render [this]
-    (render front-render-target)
+    (do
+      (set-rt-uniform  material "thisScreen" front-render-target)
+      (set-rt-uniform  material "lastScreen" back-render-target)
+      (with-rt
+        (:render-target temp-render-target)
+        (render layer))
+
+      (flip-feedback this))
     ))
 
-(defn- add-plane-obj! [dest-target source-target]
-  (let [{:keys [width height]} dest-target
-        geo (THREE.PlaneGeometry. width height)
-        msh (THREE.Mesh. geo (:material source-target)) ]
+(defn- flip-feedback [fb]
+  (FeedbackTarget.
+    (:material fb) (:layer fb)
 
-    (layer/add dest-target msh)))
-
-(defn mk-feedback [width height]
-  (let [[wd2 hd2] [(/ width 2.0) (/ height 2.0)]
-        cam   (js/THREE.OrthographicCamera.
-                (- wd2) wd2 hd2 (- hd2) 0.001 1000)
-        front (mk-render-target width height)
-        back  (mk-render-target width height) ]
-
-    (set-pos! cam (array  0 0 1))
-    (add-plane-obj! front back)
-    (add-plane-obj! back front)
-
-    (FeedbackTarget.
-      (assoc front :cam cam)
-      (assoc back  :cam cam))
+    (:temp-render-target fb)
+    (:front-render-target fb)
+    (:back-render-target fb)
     ))
 
-(defn get-back-screen [fb] (:back fb))
-(defn get-back-rt [fb] (:render-target (get-back-screen fb)))
-(defn flip-feedback [fb]
-  (FeedbackTarget. (:back fb) (:front fb)))
+(def default-vert-shader 
+  "
+      varying vec2 vUv;
 
-(defn render-layer-to-feedback [fb layer]
-  (with-rt
-    (get-back-rt fb)
-    (layer/render layer)))
+      void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      } ")
+
+(def default-frag-shader
+  "
+      varying vec2       vUv;
+      uniform sampler2D  lastScreen;
+      uniform sampler2D  thisScreen;
+
+      uniform float      time;
+
+      uniform float u_x_scale;
+      uniform float u_y_scale;
+      uniform float u_lpix_scale;
+      uniform float u_mix;
+      uniform float u_fpix_scale;
+
+      vec2 scaleIt (vec2 v, vec2 scale) {
+        vec2 offset= vec2(0.5,0.5);
+        vec2 tmp = v - offset;
+        tmp = tmp * scale;
+        tmp = tmp + offset;
+        return tmp;
+      }
+  
+      vec4 frct(vec4 v)
+      {
+          return (v - floor(v));
+      }
+  
+      void main() {
+          vec2 thisUv = vUv;
+          vec2 lastUv = scaleIt(vUv, vec2(u_x_scale, u_y_scale));
+          vec4 lastPix = texture2D (lastScreen, lastUv);
+          vec4 thisPix = texture2D (thisScreen, thisUv);
+          vec4 finalPix = (thisPix+ (lastPix * u_lpix_scale));
+          
+          finalPix = mix(thisPix, frct (finalPix), u_mix);
+
+          finalPix = u_fpix_scale * finalPix * lastPix;
+
+          gl_FragColor = finalPix ; 
+      } ")
+
+(def default-material
+  (js/THREE.ShaderMaterial. 
+    (js-obj
+      "fragmentShader" default-frag-shader
+      "vertexShader"   default-vert-shader
+      "uniforms"       (js-obj
+                         "time" (js-obj "type" "f" "value" 0.0)
+                         "thisScreen" (js-obj "type" "t" "value" nil)
+                         "lastScreen" (js-obj "type" "t" "value" nil)
+
+                         "u_x_scale"       (js-obj "type" "f" "value" 0.99)
+                         "u_y_scale"       (js-obj "type" "f" "value" 0.99)
+                         "u_lpix_scale"  (js-obj "type" "f" "value" 1.5)
+                         "u_mix"         (js-obj "type" "f" "value" 0.1)
+                         "u_fpix_scale"  (js-obj "type" "f" "value" 2.0)
+                         ))))
+
+(defn get-buffer [this]
+  (:render-target (:front-render-target this)))
+
+(defn render-layer [this layer]
+  (with-rt (:render-target (:back-render-target this))
+           (render layer)) )
+
+
+(defn mk-feedback [width height & [material']]
+  (let [material  default-material 
+        layer      (layer/mk-ortho-layer 1 1 {:clear true :clear-color 0x00ff00})
+        layer'      (layer/mk-perspective-layer 1 1 20 (array 0 0 1) {:clear true :clear-color 0x00ff00})
+        front-rt   (rt/mk-render-target width height)
+        back-rt    (rt/mk-render-target width height)
+        temp-rt    (rt/mk-render-target width height)]
+
+    (aset material "depthWrite" false)
+    (aset material "depthTest" false)
+
+    (jsu/log material)
+  
+    (add layer (js/THREE.Mesh.
+                      (js/THREE.PlaneGeometry. 1 1 1 1)
+                      material))
+
+    (FeedbackTarget. material layer front-rt back-rt temp-rt)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ends
+
+
 

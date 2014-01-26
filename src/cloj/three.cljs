@@ -11,8 +11,6 @@
   (.add *current-scene* o))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn mk-shader-material [shad]
-  (js/THREE.ShaderMaterial. (jsu/tojs shad)))
 
 (comment defn mk-img-mat [img-uri]
   (js/THREE.MeshLambertMaterial.

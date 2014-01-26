@@ -1424,11 +1424,27 @@ THREE.WebGLRenderer = function(opts){};
 */
 THREE.WebGLRenderer.setSize = function (width, height) { }
 
+
+/**
+@param {!boolean} color
+@param {!boolean} depth
+@param {!boolean} stencil
+*/
+THREE.WebGLRenderer.clear = function (color, depth, stencil) { }
+
+/**
+@param {!number} color
+@param {!number} alpha
+*/
+THREE.WebGLRenderer.setClearColor = function (color, alpha) { }
+
 /**
 @param {!THREE.Scene} scene
 @param {!THREE.Camera} camera
+@param {?*} rt
+@param {?boolean} clear
 */
-THREE.WebGLRenderer.render = function (scene, camera) { }
+THREE.WebGLRenderer.render = function (scene, camera, rt,clear) { }
 
 /** @type {!boolean} */       THREE.WebGLRenderer.prototype.autoClear;
 /** @type {*} */              THREE.WebGLRenderer.prototype.domElement;

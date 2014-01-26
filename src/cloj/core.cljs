@@ -9,7 +9,7 @@
     [gaz.system               :as sys]
     [cloj.jsutil              :as jsu]
     [cloj.timechan            :refer [mk-time-chan]]
-    [gaz.feedback             :refer [mk-feedback]]
+    [gaz.feedback             :as fb :refer [mk-feedback]]
 
     [gaz.renderable           :refer [render
                                       RenderableProto
@@ -17,11 +17,12 @@
                                       get-renderer]]
 
     [gaz.layer                :as layer ]
-    [gaz.layerproto           :refer [get-scene get-cam]]
+    [gaz.layerproto           :refer [LayerProto get-scene get-cam]]
 
     [gaz.rendertarget         :as rt :refer [RenderTarget
                                              mk-render-target
-                                             get-current-render-target]]
+                                             get-current-render-target
+                                             get-render-target]]
 
     [gaz.three                :refer [add set-pos!
                                       rnd-material
@@ -91,7 +92,6 @@
   UpdateObject
 
   (update [_ tm]
-
     (let [scaled-rot-vel (math/mul-scalar 1.0 rot-vel)
           new-vel  (obj/get-oscillate-vel pos vel math/zero 0.0005)
           scaled-new-vel (math/mul-scalar 1.0 new-vel)  ]
@@ -114,7 +114,6 @@
     (add cube)
     (CubeObject. pos vel rot rot-vel cube)))
 
-
 (defn mk-random-cube-object []
   (mk-cube-object
    (rnd-material)
@@ -134,6 +133,7 @@
     (math/mul-scalar! 0.1 (:rot-vel cb))
     cb) )
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
 
@@ -151,8 +151,14 @@
         width    (.-innerWidth js/window)
         height   (.-innerHeight js/window) ]
     (do
-      (reset! (.-autoClear renderer) false)
-      (.setSize renderer width height)
+      (doto renderer
+        (aset "autoClear" false)
+        (aset "autoClearStencil" true)
+        (aset "autoClearDepth" true)
+        (aset "autoClearColor" true)
+        (aset "sortObjects" false)
+        (.setSize width height))
+
       (.appendChild js/document.body (.-domElement renderer))
       {:renderer renderer :width width :height height })))
 
@@ -162,79 +168,119 @@
     (set! (.-position light) dir)
     light))
 
-(def test-lines [
-                 [0xff0000 [[0 0 0]
-                              [0 10 0]
-                              ]]
+(def test-lines [[0xff0000 [[0 0 0]
+                            [0 10 0] ]]
 
                  [0x00ff00 [[0 0 0]
-                              [0 -10 0]
-                              ]]
+                            [0 -10 0] ]]
 
                  [0x0000ff [[0 -10 0]
-                              [0 3 0]
-                              ]]
-                 ])
+                            [0 3 0] ]] ])
 
-(defn log [& rst]
-  (let [logger (fn [txt] (.log js/console txt))]
-    (doseq [t rst]
-      (logger t))))
 
-(defn render-scene-to-layer [this-layer scene]
-  (layer/render-with-current-rt scene (get-cam this-layer) ))
 
-(defn do-render! [game-layer off-scr-layer offscr-rt]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (let [lines-scene (lines/lines-to-scene test-lines)
-        lines-layer (layer/Layer. lines-scene (get-cam game-layer))]
 
-    (with-scene (get-scene lines-layer)
-                  (add (js/THREE.AmbientLight. 0x202020))
-                  (add (mk-light)))
 
-    (with-rt offscr-rt
-             (render off-scr-layer))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; An off screen layer
+(defrecord OffscreenLayer
+  [layer render-targert material]
 
-    (render lines-layer)
-    (render game-layer)
+  RenderableProto
+  (render [_]
+    (with-rt (:render-target render-targert)
+               (render layer)))
+  LayerProto
+    (get-scene [_] (:scene layer))
+    (get-cam [_] (:cam layer))
+    (add [_ obj] (.add (get-scene layer) obj)))
 
-    ))
+(defn mk-offscreen-layer [width height fov pos]
+
+  (let [render-target (mk-render-target width height)
+
+        material      (js/THREE.MeshPhongMaterial.
+                        (js-obj "color" 0xffffffff
+                                "shininess" 100
+                                "map" (get-render-target render-target)))
+
+        layer         (layer/mk-perspective-layer
+                        width height fov pos {:clear false :clear-color 0xff0000})]
+
+    (OffscreenLayer. layer render-target material)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-gui [gui material uni]
+  (let [prop (jsu/get-prop material "uniforms" uni)]
+    (.add gui prop "value" -10 10)))
 
 (defn game-start []
   (let [ch (mk-time-chan)]
-
     (math/init! cljs-math)
     (comment listen/on-keys scr got-key!)
 
-    (let [mk-persp layer/mk-perspective-layer
-          {:keys [width height renderer]} (mk-full-scr-renderer)
+    (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           [os-width os-height]  [1024 1024]
-          game-layer            (mk-persp width height 25 (array 0 0 8))
-          off-scr               (mk-render-target os-width os-height)
-          off-scr-layer         (mk-persp os-width os-height 45 (array 0 0 29))]
+          fb (mk-feedback 1024 1024)
+          gui (js/dat.GUI.)
+          game-layer            (layer/mk-perspective-layer 
+                                  width height 25 (array 0 0 18)
+                                  {:name "game" :clear true :clear-color 0x0000ff})
+          off-scr-layer         (mk-offscreen-layer os-width os-height 45 (array 0 0 100))
+
+          fb-mat (js/THREE.MeshPhongMaterial. (js-obj
+                                                "color" 0xffffff
+                                                "shininess" 100
+                                                "map" (fb/get-buffer fb)))
+
+          plane (js/THREE.Mesh.
+                  (js/THREE.PlaneGeometry. 7 7 1 1)
+                  fb-mat)
+
+          ]
+
+      (add-gui gui (:material fb) "u_x_scale")
+      (add-gui gui (:material fb) "u_y_scale")
+      (add-gui gui (:material fb) "u_lpix_scale")
+      (add-gui gui (:material fb) "u_mix")
+      (add-gui gui (:material fb) "u_fpix_scale")
 
       (set-renderer! renderer)
 
       (with-scene (get-scene game-layer)
                   (add (js/THREE.AmbientLight. 0x808080))
                   (add (mk-light))
-                  (dotimes [_ 1]
-                    (obj/add-obj! (mk-one-cube (:material off-scr)))))
+                  (add plane)
+                  (dotimes [_ 0]
+                    (obj/add-obj! (mk-one-cube (:material off-scr-layer)))
+                    ))
 
       (with-scene (get-scene off-scr-layer)
                   (add (js/THREE.AmbientLight. 0x202020))
                   (add (mk-light))
-                  (dotimes [_ 300]
+                  (dotimes [_ 100]
                     (add-rnd-cube-obj!)) )
 
-      (go 
-        (loop [tm 0 ]
-          (obj/update-objs! tm)
-          
-          (do-render! game-layer off-scr-layer (:render-target off-scr))
 
-          (recur (<! ch)))))))
+
+      (go-loop [tm 0
+                fb fb ]
+
+               (obj/update-objs! tm)
+
+               (render game-layer)
+               (render off-scr-layer)
+
+               (fb/render-layer fb (:layer off-scr-layer))
+               (aset (jsu/get-prop plane "material") "map" (fb/get-buffer fb))
+
+               (recur
+                 (<! ch)
+                 (render fb)
+                 )))))
 
 (game-start)
 
