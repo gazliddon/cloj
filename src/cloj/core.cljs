@@ -245,7 +245,10 @@
 
           ]
 
+      
       (fb/add-dat gui effects/basic-shader (:material fb) )
+
+      (.remember gui opts)
       (.add gui opts "time-scale" 0.0001 3)
 
 

@@ -1,11 +1,11 @@
 (ns gaz.effects)
 
 (def basic-shader
-  { :uniforms {:u_x_scale    {:type "f" :value 0.99 :min 0.001 :max 2 :nice-name "X"}
-               :u_y_scale    {:type "f" :value 0.99 :min 0.001 :max 2 :nice-name "Y"}
-               :u_lpix_scale {:type "f" :value 0.1 :min -0.2 :max 0.2}
-               :u_mix        {:type "f" :value 0.1 :min -1 :max 10 :nice-name "Mix"}
-               :u_fpix_scale {:type "f" :value 2.0 :min -5 :max 5} }
+  { :uniforms {:u_x_scale    {:type "f" :value 0.99 :min 0.001 :max 10 :nice-name "X"}
+               :u_y_scale    {:type "f" :value 0.99 :min 0.001 :max 10 :nice-name "Y"}
+               :u_lpix_scale {:type "f" :value 0.1 :min -2.0 :max 2.0 :nice-name "Lpix"}
+               :u_mix        {:type "f" :value 0.1 :min -5.0 :max 5.0 :nice-name "Mix"}
+               :u_fpix_scale {:type "f" :value 2.0 :min -5.0 :max 5.0 :nice-name "fpix"} }
 
    :frag "
          varying vec2       vUv;

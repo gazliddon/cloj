@@ -71,11 +71,15 @@
     (let [min-val (:min v)
           max-val (:max v)
           value   (:value v)
-          cont   (.add gui
-            (jsu/get-prop material "uniforms" (name k))
-            "value" min-val max-val) 
+          prop   (jsu/get-prop material "uniforms" (name k))
           ]
-      (.name cont (or (:nice-name v)  (name k)))
+
+      (.remember gui prop)
+
+      (-> gui
+        (.add prop "value" min-val max-val)
+        (.name (or (:nice-name v) (name k)))
+        )
       )
     )
   )
