@@ -70,10 +70,13 @@
   (doseq [[k v] (:uniforms effect)]
     (let [min-val (:min v)
           max-val (:max v)
-          value   (:value v)]
-      (.add gui
+          value   (:value v)
+          cont   (.add gui
             (jsu/get-prop material "uniforms" (name k))
-            "value" min-val max-val))
+            "value" min-val max-val) 
+          ]
+      (.name cont (or (:nice-name v)  (name k)))
+      )
     )
   )
 
