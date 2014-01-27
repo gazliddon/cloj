@@ -53,7 +53,14 @@
 (def all-mats
   [r-material
    g-material
-   b-material])
+   b-material
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0x02720a))
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0x02020a))
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0x32633a))
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0xd0020a))
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0x32033a))
+   (js/THREE.MeshPhongMaterial. (default-mat-settings 0xd0920a))
+   ])
 
 (defn rnd-material []
   (let [n (jsu/random-int (count all-mats))]

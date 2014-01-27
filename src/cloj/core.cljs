@@ -3,6 +3,7 @@
   (:require
 
     [gaz.lines                :as lines]
+    [gaz.effects :as effects]
 
     [goog.dom                 :as dom]
     [cljs.core.async          :as ca :refer [chan <! >! put!]]
@@ -92,9 +93,9 @@
   UpdateObject
 
   (update [_ tm]
-    (let [scaled-rot-vel (math/mul-scalar 1.0 rot-vel)
+    (let [scaled-rot-vel (math/mul-scalar tm rot-vel)
           new-vel  (obj/get-oscillate-vel pos vel math/zero 0.0005)
-          scaled-new-vel (math/mul-scalar 1.0 new-vel)  ]
+          scaled-new-vel (math/mul-scalar tm new-vel)  ]
 
       (math/add! pos scaled-new-vel)
       (math/add! rot scaled-rot-vel)
@@ -224,7 +225,7 @@
 
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           [os-width os-height]  [1024 1024]
-          fb (mk-feedback 1024 1024)
+          fb (mk-feedback 1024 1024 effects/basic-shader)
           gui (js/dat.GUI.)
           game-layer            (layer/mk-perspective-layer 
                                   width height 25 (array 0 0 18)
@@ -237,16 +238,16 @@
                                                 "map" (fb/get-buffer fb)))
 
           plane (js/THREE.Mesh.
-                  (js/THREE.PlaneGeometry. 7 7 1 1)
+                  (js/THREE.PlaneGeometry. 18 18 1 1)
                   fb-mat)
+
+          opts (js-obj "time-scale" 1.0 )
 
           ]
 
-      (add-gui gui (:material fb) "u_x_scale")
-      (add-gui gui (:material fb) "u_y_scale")
-      (add-gui gui (:material fb) "u_lpix_scale")
-      (add-gui gui (:material fb) "u_mix")
-      (add-gui gui (:material fb) "u_fpix_scale")
+      (fb/add-dat gui effects/basic-shader (:material fb) )
+      (.add gui opts "time-scale" 0.0001 3)
+
 
       (set-renderer! renderer)
 
@@ -259,17 +260,16 @@
                     ))
 
       (with-scene (get-scene off-scr-layer)
-                  (add (js/THREE.AmbientLight. 0x202020))
+                  (add (js/THREE.AmbientLight. 0x404040))
                   (add (mk-light))
+                  
                   (dotimes [_ 100]
                     (add-rnd-cube-obj!)) )
-
-
 
       (go-loop [tm 0
                 fb fb ]
 
-               (obj/update-objs! tm)
+               (obj/update-objs! (* (aget opts "time-scale") tm))
 
                (render game-layer)
                (render off-scr-layer)

@@ -39,7 +39,6 @@
 (defn mk-layer
   [scene cam opts]
   (let [opts (merge default-opts opts)]
-    (jsu/log "merge ops" (str opts ) )
     (Layer. scene cam opts)))
 
 (defn mk-perspective-cam [width height fov pos]

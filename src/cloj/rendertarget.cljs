@@ -12,7 +12,10 @@
                    width height
                    (js-obj
                      "format"        js/THREE.RGBFormat
-                     "stencilBuffer" false)) ]
+                     "stencilBuffer" false
+                     "anistropy" false)) ]
+
+    (aset rt-rt "generateMipMaps" false)
 
     (RenderTarget. rt-rt width height)) )
 
