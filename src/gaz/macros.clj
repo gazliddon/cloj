@@ -4,7 +4,7 @@
   `(binding [gaz.three/*current-scene* ~scn]
     ~@body))
 
-(ns gaz.rendertarget)
+(ns render.rendertarget)
 
 (defmacro with-rt [rt & body]
  `(binding [*current-rt* ~rt]

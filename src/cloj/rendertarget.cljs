@@ -1,4 +1,4 @@
-(ns gaz.rendertarget
+(ns render.rendertarget
   )
 
 (def ^:dynamic *current-rt* nil)

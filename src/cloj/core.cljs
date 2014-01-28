@@ -4,6 +4,7 @@
 
     [gaz.lines                :as lines]
     [gaz.effects :as effects]
+    [ui.editable :as  editable] 
 
     [goog.dom                 :as dom]
     [cljs.core.async          :as ca :refer [chan <! >! put!]]
@@ -12,7 +13,7 @@
     [cloj.timechan            :refer [mk-time-chan]]
     [gaz.feedback             :as fb :refer [mk-feedback]]
 
-    [gaz.renderable           :refer [render
+    [render.renderable        :refer [render
                                       RenderableProto
                                       set-renderer!
                                       get-renderer]]
@@ -20,7 +21,7 @@
     [gaz.layer                :as layer ]
     [gaz.layerproto           :refer [LayerProto get-scene get-cam]]
 
-    [gaz.rendertarget         :as rt :refer [RenderTarget
+    [render.rendertarget         :as rt :refer [RenderTarget
                                              mk-render-target
                                              get-current-render-target
                                              get-render-target]]
@@ -33,11 +34,14 @@
     [gaz.math                 :as math]
     [gaz.rand                 :refer [rnd-v3]]
     [gaz.obj                  :as obj :refer [UpdateObject]]
-    [gaz.control              :as control])
+    [gaz.control              :as control]
+    
+    [content.effect  :as  effect] 
+    [content.cubegeo :as cubegeo])
 
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
-    [gaz.rendertarget         :refer [with-rt]]
+    [render.rendertarget      :refer [with-rt]]
     [gaz.macros               :refer [with-scene ]])
   )
 
@@ -85,6 +89,17 @@
   [ cam]
   (comment let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
     (cam/update (assoc cam :vel nv))))
+
+
+(defrecord Cube2Object [pos start-time msh]
+  UpdateObject
+  (update [_ tm]
+
+    )
+  
+  (is-dead? [_] false)
+  )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
@@ -181,13 +196,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; An off screen layer
 (defrecord OffscreenLayer
-  [layer render-targert material]
+  [layer render-targert material ambient-light]
 
   RenderableProto
   (render [_]
@@ -208,15 +219,48 @@
                                 "map" (get-render-target render-target)))
 
         layer         (layer/mk-perspective-layer
-                        width height fov pos {:clear false :clear-color 0xff0000})]
+                        width height fov pos {:clear false :clear-color 0xff0000})
+        ambient-light (js/THREE.AmbientLight. 0x404040)]
 
-    (OffscreenLayer. layer render-target material)))
+    (with-scene (get-scene layer)
+                (add ambient-light)
+                (add (mk-light)))
+
+    (OffscreenLayer. layer render-target material ambient-light)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn mk-game-layer [width height]
+  (let [game-layer (layer/mk-perspective-layer 
+                     width height 25 (array 0 0 18)
+                     {:name "game" :clear true :clear-color 0x0000ff})]
+    (with-scene
+      (get-scene game-layer)
+      (add (js/THREE.AmbientLight. 0x808080))
+      (add (mk-light))
+      )
+    game-layer))
 
-(defn add-gui [gui material uni]
-  (let [prop (jsu/get-prop material "uniforms" uni)]
-    (.add gui prop "value" -10 10)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn mk-feedback-plane [mp sx sy]
+  (let [fb-mat (js/THREE.MeshPhongMaterial.
+                 (js-obj
+                   "color" 0xffffff
+                   "shininess" 100
+                   "map" mp
+                   ))
+        plane (js/THREE.Mesh.
+                (js/THREE.PlaneGeometry. sx sy 1 1)
+                fb-mat)]
+
+    plane))
+
+(defn set-map! [obj mp] (aset (aget obj "material") "map" mp))
+
+(defn mk-effect-quad [effect pos]
+  (let [plane (mk-feedback-plane (effect/get-output effect) 2 2)]
+    (set-pos! plane pos)
+    plane))
 
 (defn game-start []
   (let [ch (mk-time-chan)]
@@ -224,67 +268,52 @@
     (comment listen/on-keys scr got-key!)
 
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
-          [os-width os-height]  [1024 1024]
-          fb (mk-feedback 1024 1024 effects/basic-shader)
-          gui (js/dat.GUI.)
-          game-layer            (layer/mk-perspective-layer 
-                                  width height 25 (array 0 0 18)
-                                  {:name "game" :clear true :clear-color 0x0000ff})
-          off-scr-layer         (mk-offscreen-layer os-width os-height 45 (array 0 0 100))
+          [osw osh]       [1024 1024]
+          fb              (mk-feedback osw osh effects/basic-shader)
+          gui             (js/dat.GUI.)
+          game-layer      (mk-game-layer width height) 
+          off-scr-layer   (mk-offscreen-layer osw osh 45 (array 0 0 100))
+          plane           (mk-feedback-plane (fb/get-buffer fb) 10 10)
+          opts            (js-obj "time-scale" 1.0 )
+          cube-geo        (cubegeo/mk-cube-geo)
+          cube-plane      (mk-effect-quad cube-geo (array 0 0 1)) ]
 
-          fb-mat (js/THREE.MeshPhongMaterial. (js-obj
-                                                "color" 0xffffff
-                                                "shininess" 100
-                                                "map" (fb/get-buffer fb)))
+      (editable/add-to-dat fb gui)
 
-          plane (js/THREE.Mesh.
-                  (js/THREE.PlaneGeometry. 18 18 1 1)
-                  fb-mat)
-
-          opts (js-obj "time-scale" 1.0 )
-
-          ]
-
-      
-      (fb/add-dat gui effects/basic-shader (:material fb) )
-
-      (.remember gui opts)
       (.add gui opts "time-scale" 0.0001 3)
-
 
       (set-renderer! renderer)
 
       (with-scene (get-scene game-layer)
-                  (add (js/THREE.AmbientLight. 0x808080))
-                  (add (mk-light))
-                  (add plane)
-                  (dotimes [_ 0]
-                    (obj/add-obj! (mk-one-cube (:material off-scr-layer)))
-                    ))
+                  (add cube-plane)
+                  (add plane))
 
       (with-scene (get-scene off-scr-layer)
-                  (add (js/THREE.AmbientLight. 0x404040))
-                  (add (mk-light))
-                  
                   (dotimes [_ 100]
                     (add-rnd-cube-obj!)) )
 
-      (go-loop [tm 0
+      (go-loop [[dx time] [0 0]
                 fb fb ]
 
-               (obj/update-objs! (* (aget opts "time-scale") tm))
+               (obj/update-objs! (* (aget opts "time-scale") dx))
+               (effect/update cube-geo [dx time])
+
+               (render cube-geo)
 
                (render game-layer)
-               (render off-scr-layer)
 
                (fb/render-layer fb (:layer off-scr-layer))
-               (aset (jsu/get-prop plane "material") "map" (fb/get-buffer fb))
+               (set-map! plane (fb/get-buffer fb))
+               (render fb)
 
                (recur
-                 (<! ch)
-                 (render fb)
-                 )))))
+                 (<! ch) (fb/flip fb))))))
 
 (game-start)
+
+(defprotocol Editable
+  (populate-gui [this gui])
+  )
+
 
 

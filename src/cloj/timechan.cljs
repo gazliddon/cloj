@@ -33,7 +33,7 @@
     (go-loop [last-time nil]
              (let [this-time (<! in-chan)]
                (when-not (nil? last-time)
-                 (put! out-chan (/ (- this-time last-time) target-frame-time)))
+                 (put! out-chan [(/ (- this-time last-time) target-frame-time) this-time] ))
                (recur this-time)))
     out-chan))
 

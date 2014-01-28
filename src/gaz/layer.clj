@@ -3,8 +3,8 @@
     [gaz.layerproto :refer [LayerProto]]
     [gaz.three :refer [set-pos!]]
     [cloj.jsutil :as jsu]
-    [gaz.rendertarget :refer [*current-rt*]]
-    [gaz.renderable :refer [RenderableProto get-renderer]]))
+    [render.rendertarget :refer [*current-rt*]]
+    [render.renderable :refer [RenderableProto get-renderer]]))
 
 (defn render-with-current-rt-opts [scene cam opts]
   (doto (get-renderer)

@@ -10,6 +10,10 @@
   (add-vel! [_ tm])
   (is-dead? [_]))
 
+
+(defprotocol UpdateObjectManager
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def objs (atom [] ))
 
