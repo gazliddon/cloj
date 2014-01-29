@@ -3,4 +3,5 @@
 (defprotocol Effect
   (update [_ tm])
   (get-output [_])
+  (get-inputs [_])
   )

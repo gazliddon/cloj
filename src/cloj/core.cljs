@@ -160,7 +160,7 @@
   (let [
         render-opts (js-obj
                       "antialias" false
-                      "alpha" false
+                      "alpha" true
                       "stencil" false)
 
         renderer (js/THREE.WebGLRenderer. render-opts)
@@ -172,7 +172,6 @@
         (aset "autoClearStencil" true)
         (aset "autoClearDepth" true)
         (aset "autoClearColor" true)
-        (aset "sortObjects" false)
         (.setSize width height))
 
       (.appendChild js/document.body (.-domElement renderer))
@@ -248,6 +247,7 @@
                    "color" 0xffffff
                    "shininess" 100
                    "map" mp
+                   "transparent" true
                    ))
         plane (js/THREE.Mesh.
                 (js/THREE.PlaneGeometry. sx sy 1 1)
@@ -279,6 +279,7 @@
           cube-plane      (mk-effect-quad cube-geo (array 0 0 1)) ]
 
       (editable/add-to-dat fb gui)
+      (editable/add-to-dat cube-geo (.addFolder gui "Geometry"))
 
       (.add gui opts "time-scale" 0.0001 3)
 

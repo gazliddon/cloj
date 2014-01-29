@@ -9,8 +9,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc utils
-(defn get-prop [obj & arr]
-  (reduce #(aget %1 %2) obj arr))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Color utils
@@ -39,7 +38,7 @@
 
   (let [geo     (js/THREE.Geometry.)
         line    (js/THREE.Line. geo)
-        colprop (get-prop line "material" "color") ]
+        colprop (get-in line [ "material" "color" ]) ]
 
     (aset geo "vertices" (to-three-vec xs))
     (set-col colprop (col/hex-col-to-vec col))

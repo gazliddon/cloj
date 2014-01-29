@@ -23,8 +23,9 @@
 
 (declare flip-feedback)
 
+
 (defn- set-uniform [material uni val]
-  (let [prop (jsu/get-prop material "uniforms" uni)]
+  (let [prop (get-in material [ "uniforms" uni ])]
     (aset prop "value" val)))
 
 (defn- set-rt-uniform [shader uni rt]
@@ -82,6 +83,11 @@
                  material))
 
     (FeedbackTarget. shader layer front-rt back-rt temp-rt)))
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ends

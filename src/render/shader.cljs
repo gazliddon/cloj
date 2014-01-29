@@ -12,7 +12,7 @@
   (str "uniform "  (type-to-id (:type v)) " " (name k) ";"))
 
 (defn- gen-uniform-shader-text [unis]
-  (map #(gen-uniform-shader-text-entry (first %) (first (rest %))) unis))
+  (map #(gen-uniform-shader-text-entry (first %) (second %)) unis))
 
 (defn- mk-shader-text [effect typ]
   (let [uni (:uniforms effect)
@@ -43,7 +43,7 @@
 
   (add-to-dat [_ dat]
     (doseq [[k v] (:uniforms edn)]
-      (let [ prop   (jsu/get-prop material "uniforms" (name k)) ]
+      (let [ prop   (get-in material ["uniforms" (name k)]) ]
         (-> dat
           (.add prop "value" (:min v) (:max v))
           (.name (or (:nice-name v) (name k)))

@@ -7,13 +7,17 @@
 (defrecord RenderTarget [render-target width height])
 (defn get-render-target [rt] (:render-target rt))
 
-(defn mk-render-target [width height]
-  (let [rt-rt    (js/THREE.WebGLRenderTarget.
+(def default-opts {:format        js/THREE.RGBFormat
+                   :stencilBuffer false
+                   :anistropy     false})
+
+(defn mk-render-target [width height & [opts]]
+  (let [opts (or opts default-opts)
+        opts (merge default-opts opts)
+        
+        rt-rt    (js/THREE.WebGLRenderTarget.
                    width height
-                   (js-obj
-                     "format"        js/THREE.RGBFormat
-                     "stencilBuffer" false
-                     "anistropy" false)) ]
+                   (clj->js opts))]
 
     (aset rt-rt "generateMipMaps" false)
 

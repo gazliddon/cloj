@@ -25,7 +25,7 @@
 
 (defn mk-line [col xs]
   (let [line (js/THREE.Line. (to-three-vec xs))
-        colprop (jsu/get-prop line "material" "color")]
+        colprop (get-in  line [ "material" "color" ])]
     (set-col colprop (col/hex-col-to-vec col))
     line))
 

@@ -6,14 +6,10 @@
     [render.rendertarget :refer [*current-rt*]]
     [render.renderable :refer [RenderableProto get-renderer]]))
 
-(defn render-with-current-rt-opts [scene cam opts]
-  (doto (get-renderer)
-      (.setClearColor (:clear-color opts))
-      (.render scene cam *current-rt* (:clear opts))
-    ))
 
 (def default-opts {:clear false
-                  :clear-color 0xff00ff})
+                   :clear-color 0xff00ff
+                   :alpha 1})
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Layer proto and game and hud layers
 (defrecord Layer [scene cam opts]
@@ -29,12 +25,9 @@
   (render [this ]
     (do
       (doto (get-renderer)
-        (.setClearColor (:clear-color opts))
+        (.setClearColor (:clear-color opts) (:alpha opts))
         (.render scene cam *current-rt* (:clear opts))
-        )
-
-      )
-    ))
+        ))))
 
 (defn mk-layer
   [scene cam opts]

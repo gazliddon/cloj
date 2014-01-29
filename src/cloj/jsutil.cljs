@@ -13,9 +13,23 @@
   (doseq [t rst]
       (.log js/console t)))
 
-(defn get-prop [obj & arr]
-  (reduce #(aget %1 %2) obj arr))
+(defn strkey
+  "Helper fn that converts keywords into strings"
+  [x]
+  (if (keyword? x)
+    (name x)
+    x))
 
+(extend-type object
+  ILookup
+  (-lookup
+    ([o k]
+       (aget o (strkey k)))
+    ([o k not-found]
+       (let [s (strkey k)]
+         (if (goog.object.containsKey o s)
+           (aget o s)
+           not-found)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;ends
 
