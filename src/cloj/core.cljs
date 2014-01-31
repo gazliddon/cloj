@@ -149,10 +149,8 @@
     (math/mul-scalar! 0.1 (:rot-vel cb))
     cb) )
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
-
 (def cljs-math { :abs  Math/abs
                  :sqrt Math/sqrt })
 
@@ -238,7 +236,6 @@
       (add (mk-light))
       )
     game-layer))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn mk-feedback-plane [mp sx sy]

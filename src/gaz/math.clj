@@ -1,11 +1,22 @@
 (ns gaz.math)
 
 (defn init! [v])
+
 (defn mk-vec
-  ([x y z] (array x y z)))
+  ([x y z] (array x y z))
+  ([[x y z]](array x y z))
+  ([] (array 0 0 0)))
+
+(defn mk-vec-s [v] (mk-vec v v v ))
 
 (defn dot [[x0 y0 z0] [x1 y1 z1]]
   (+ (* x0 x1) (* y0 y1) (* z0 z1) ))
+
+(defn add-scalar [s v]
+  (array 
+    (+ s (aget v 0))
+    (+ s (aget v 1))
+    (+ s (aget v 2))))
 
 (defn add [v0 v1]
   (array (+ (aget v0 0) (aget v1 0))
@@ -121,40 +132,6 @@
   (let [{:keys [pos dir]} ray]
     (sub pos (mul-scalar (ray-distance-to-plane ray plane) dir ))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(comment 
 
-  ;; This was faster than maps but still created
-  ;; a persistent vector for each vec3
-
-  (ns gaz.math)
-
-  (defn init! [v])
-  (defn mk-vec
-    ([x y z] [x y z]))
-
-  (defn dot [v0 v1]
-    (let [[x0 y0 z0] v0
-          [x1 y1 z1] v1]
-      (+ (* x0 x1) (* y0 y1) (* z0 z1) )))
-
-  (defn add [v0 v1]
-    (let [[x0 y0 z0] v0
-          [x1 y1 z1] v1]
-      [(+ x0 x1) (+ y0 y1) (+ z0 z1)] ))
-
-  (defn sub [v0 v1]
-    (let [[x0 y0 z0] v0
-          [x1 y1 z1] v1]
-      [ (- x0 x1) (- y0 y1) (- z0 z1)]))
-
-  (defn mul-scalar [s v0]
-    (let [[x0 y0 z0] v0 ]
-      [ (* s x0 ) (* s y0 ) (* s z0 )]))
-
-  (defn div-scalar [s v0]
-    (let [[x0 y0 z0] v0 ]
-      [ (/ x0 s) (/ y0 s) (/ z0 s)]))
-  
-  )
 
 
