@@ -42,17 +42,18 @@
 (defn float-to-gui [gui jso attrs k]
   (let [controller (.add gui jso (name k))]
     (doto controller
-      (.onChange (fn [v] (reset! @( :value (attrs k)) v)))
-      )))
+      (.onChange
+        (fn [v] (reset! ( :value (attrs k)) v))))
+    ))
 
 (defn v3-to-gui [gui jso attrs k]
-  (let [gui (.addFolder gui (name k))
+  (let [gui    (.addFolder gui (name k))
         v3atom (:value  (attrs k)) ]
 
     (doseq [[nm i] [["x" 0] ["y" 1] ["z" 2]] ]
       (doto (.add gui (aget jso (name k)) i)
         (.name nm)
-        (.onChange (fn[v] (reset! v3atom #(assoc %1 i v)) ))))))
+        (.onChange (fn[v] (aset @v3atom i v)))))))
 
 (def type-to-gui-func
   {:float float-to-gui
