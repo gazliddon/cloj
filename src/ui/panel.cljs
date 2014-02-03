@@ -1,7 +1,6 @@
 (ns ui.panel
   (:require
-    [gaz.three  :as three])
-  )
+    [gaz.three  :as three]))
 
 (def width-segments 10)
 (def height-segments 10)

@@ -3,6 +3,7 @@
 (ns gaz.listen
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require 
+    [cloj.jsutil :as jsu]
     [goog.events :as events]
     [cljs.core.async :as ca]))
 
@@ -15,11 +16,11 @@
                    (fn [e] (ca/put! outchan e)))
     outchan))
 
-(defn merge-listen [el events]
+(defn merge-listen [el & events]
   (ca/merge (map #(listen el %) events)))
 
 (defn listen-mouse [el]
-  (merge-listen el ["mousemove" "mousedown" "mouseup"]))
+  (merge-listen el "mousemove" "mousedown" "mouseup"))
 
 (defn listen-keys
   "Create a merged channel of keydown and keyup events for an element"
@@ -34,3 +35,14 @@
             (f k))))))
 
 
+
+(defn get-all-key-events [dom-element]
+   (merge-listen dom-element "keydown" "keyup"))
+
+(defn test-it [dom-element]
+  (let [in-chan (get-all-key-events dom-element)]
+    (go
+      (while true
+        (let [key-in (ca/<! in-chan)]
+          (jsu/log key-in)
+          )))))

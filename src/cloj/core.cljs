@@ -32,6 +32,8 @@
     [math.rand                :refer [rnd-v3]]
     [gaz.obj                  :as obj ]
     [gaz.control              :as control]
+
+    [gaz.listen               :as listen]
     
     )
   (:require-macros
@@ -149,8 +151,7 @@
 
 
 (defn mk-full-scr-renderer []
-  (let [
-        render-opts (js-obj
+  (let [render-opts (js-obj
                       "antialias" false
                       "alpha" true
                       "stencil" false)
@@ -247,6 +248,8 @@
   (let [ch (mk-time-chan)]
     (comment listen/on-keys scr got-key!)
 
+    (listen/test-it scr)
+
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           [osw osh]       [1024 1024]
           fb              (fb/mk-feedback osw osh basic-shader/basic-shader)
@@ -280,7 +283,6 @@
                (effect/update cube-geo [dx time])
 
                (renderable/render cube-geo)
-
                (renderable/render game-layer)
 
                (fb/render-layer fb (:layer off-scr-layer))

@@ -2,9 +2,11 @@
   (:require
     [math.vec3                  :as m]
     [cloj.jsutil                :as jsu]
+    [gaz.util                   :as util]
     [clojure.string             :as string]
     )
   )
+
 
 (defrecord Attrs [data])
 
@@ -67,7 +69,8 @@
 
 (def type-to-uni-type {:float "f"
                        :vec3  "v"
-                       :tex2d "t" })
+                       :tex2d "t"
+                       })
 
 (defn uni-xform [v]
   (if-let [typ (type-to-uni-type (:type v)) ]
@@ -79,12 +82,13 @@
     (doseq [[k v] attrs]
       (when-let [uni (uni-xform v)]
         (aset ret (name k) uni)) )
-    ret))
+    ret
+    ))
 
 (def get-type
-  {:float  "float"
-   :vec3   "vec3"
-   :tex2d  "sampler2D"})
+  {:float "float"
+   :vec3 "vec3"
+   :tex2d "sampler2D"})
 
 (defn attr-to-uniform-str [k v]
   (if-let [str-type ((:type v) get-type)]
