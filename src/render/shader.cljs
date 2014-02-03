@@ -1,53 +1,39 @@
 (ns render.shader
   (:require
-    [ui.editable :as  editable] 
-    [clojure.string :as string]
-    [cloj.jsutil :as jsu]
+    [ui.editable     :as  editable]
+    [ui.attrs        :as attrs]
+    [cloj.jsutil     :as jsu]
     ))
 
-(def type-to-id {"f" "float"
-                 "t" "sampler2d"})
 
-(defn- gen-uniform-shader-text-entry [k v]
-  (str "uniform "  (type-to-id (:type v)) " " (name k) ";"))
+(defn remove-types [unis types-2-go])
 
-(defn- gen-uniform-shader-text [unis]
-  (map #(gen-uniform-shader-text-entry (first %) (second %)) unis))
+(def remove-for-vertex [:tex2d])
 
-(defn- mk-shader-text [effect typ]
-  (let [uni (:uniforms effect)
-        uni-text (string/join "\n" (gen-uniform-shader-text uni))]
-  (str uni-text "\n" (typ effect))))
+(defn seq-contains? [coll target] (some #(= target %) coll))
 
-(defn- mk-shader-uniforms [effect]
-  (clj->js (:uniforms effect)))
+(defn mk-vertex-unis [unis]
+  (filter
+    (fn[[k v]] (not  (seq-contains? remove-for-vertex (:type v) )))
+    unis))
+
+(defn- mk-shader-text [txt unis]
+  (str (attrs/attrs-to-uniform-str unis) "\n" txt))
 
 (defn- mk-shader-material-map [edn]
-  (let [ shader-map
-        (js-obj
-          "fragmentShader"  (mk-shader-text edn :frag)
-          "vertexShader"    (mk-shader-text edn :vert) 
-          "uniforms" (js-obj
-                       "time"       (js-obj "type" "f" "value" 0.0)
-                       "thisScreen" (js-obj "type" "t" "value" nil)
-                       "lastScreen" (js-obj "type" "t" "value" nil)
-                       ))
-        uni-prop (aget shader-map "uniforms")]
-
-    (doseq [[k v] (:uniforms edn)]
-      (aset uni-prop (name k) (clj->js v)))
-    shader-map))
+  (let [all-unis   (merge (:uniforms edn) (:editable edn))
+        uni-prop   (attrs/mk-material-init-from-uniforms all-unis) ]
+    (js-obj
+      "fragmentShader"  (mk-shader-text (:frag edn) all-unis)
+      "vertexShader"    (mk-shader-text (:vert edn) (mk-vertex-unis all-unis)) 
+      "uniforms"        uni-prop)))
 
 (defrecord Shader [material edn]
   editable/UIEditable
 
   (add-to-dat [_ dat]
-    (doseq [[k v] (:uniforms edn)]
-      (let [ prop   (get-in material ["uniforms" (name k)]) ]
-        (-> dat
-          (.add prop "value" (:min v) (:max v))
-          (.name (or (:nice-name v) (name k)))
-          )))))
+    (doseq [[k v] (:editable edn)]
+      )))
 
 (defn mk-material [edn]
   (let [mat-map (mk-shader-material-map edn)

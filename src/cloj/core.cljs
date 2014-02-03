@@ -1,44 +1,39 @@
 (ns cloj.core
 
   (:require
+    
+    [content.basicshader      :as basic-shader]
+    [content.effect           :as effect] 
+    [content.cubegeo          :as cubegeo]
 
-    [gaz.lines                :as lines]
-    [gaz.effects :as effects]
-    [ui.editable :as  editable] 
+    [ui.editable              :as editable] 
 
     [goog.dom                 :as dom]
     [cljs.core.async          :as ca :refer [chan <! >! put!]]
-    [gaz.system               :as sys]
     [cloj.jsutil              :as jsu]
     [cloj.timechan            :refer [mk-time-chan]]
-    [gaz.feedback             :as fb :refer [mk-feedback]]
-
-    [render.renderable        :refer [render
-                                      RenderableProto
-                                      set-renderer!
-                                      get-renderer]]
+    
+    [render.feedback          :as fb ]
+    [render.rendertarget      :as rt ]
+    [render.renderable        :as renderable ]
 
     [gaz.layer                :as layer ]
     [gaz.layerproto           :refer [LayerProto get-scene get-cam]]
 
-    [render.rendertarget         :as rt :refer [RenderTarget
-                                             mk-render-target
-                                             get-current-render-target
-                                             get-render-target]]
 
     [gaz.three                :refer [add set-pos!
                                       rnd-material
                                       set-rot!
                                       set-posrot! ]]
+
     [gaz.keys                 :as gkeys]
-    [gaz.math                 :as math]
-    [gaz.rand                 :refer [rnd-v3]]
-    [gaz.obj                  :as obj :refer [UpdateObject]]
+    
+    [math.vec3                :as v3]
+    [math.rand                :refer [rnd-v3]]
+    [gaz.obj                  :as obj ]
     [gaz.control              :as control]
     
-    [content.effect  :as  effect] 
-    [content.cubegeo :as cubegeo])
-
+    )
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
     [render.rendertarget      :refer [with-rt]]
@@ -92,7 +87,7 @@
 
 
 (defrecord Cube2Object [pos start-time msh]
-  UpdateObject
+  obj/UpdateObject
   (update [_ tm]
 
     )
@@ -105,15 +100,15 @@
 (def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
 
 (defrecord CubeObject [pos vel rot rot-vel msh]
-  UpdateObject
+  obj/UpdateObject
 
   (update [_ tm]
-    (let [scaled-rot-vel (math/mul-scalar tm rot-vel)
-          new-vel  (obj/get-oscillate-vel pos vel math/zero 0.0005)
-          scaled-new-vel (math/mul-scalar tm new-vel)  ]
+    (let [scaled-rot-vel (v3/mul-scalar tm rot-vel)
+          new-vel  (obj/get-oscillate-vel pos vel v3/zero 0.0005)
+          scaled-new-vel (v3/mul-scalar tm new-vel)  ]
 
-      (math/add! pos scaled-new-vel)
-      (math/add! rot scaled-rot-vel)
+      (v3/add! pos scaled-new-vel)
+      (v3/add! rot scaled-rot-vel)
       (set-posrot! msh pos rot)
       (CubeObject. pos new-vel rot rot-vel msh))
     )
@@ -145,14 +140,13 @@
   (let [cb (mk-random-cube-object)
         msh (:msh cb)]
     (aset (:msh cb) "material" material)
-    (math/mul-scalar! 0.01 (:pos cb) )
-    (math/mul-scalar! 0.1 (:rot-vel cb))
+    (v3/mul-scalar! 0.01 (:pos cb) )
+    (v3/mul-scalar! 0.1 (:rot-vel cb))
     cb) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
-(def cljs-math { :abs  Math/abs
-                 :sqrt Math/sqrt })
+
 
 (defn mk-full-scr-renderer []
   (let [
@@ -181,26 +175,16 @@
     (set! (.-position light) dir)
     light))
 
-(def test-lines [[0xff0000 [[0 0 0]
-                            [0 10 0] ]]
-
-                 [0x00ff00 [[0 0 0]
-                            [0 -10 0] ]]
-
-                 [0x0000ff [[0 -10 0]
-                            [0 3 0] ]] ])
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; An off screen layer
 (defrecord OffscreenLayer
   [layer render-targert material ambient-light]
 
-  RenderableProto
+  renderable/RenderableProto
   (render [_]
     (with-rt (:render-target render-targert)
-               (render layer)))
+               (renderable/render layer)))
   LayerProto
     (get-scene [_] (:scene layer))
     (get-cam [_] (:cam layer))
@@ -208,12 +192,12 @@
 
 (defn mk-offscreen-layer [width height fov pos]
 
-  (let [render-target (mk-render-target width height)
+  (let [render-target (rt/mk-render-target width height)
 
         material      (js/THREE.MeshPhongMaterial.
                         (js-obj "color" 0xffffffff
                                 "shininess" 100
-                                "map" (get-render-target render-target)))
+                                "map" (rt/get-render-target render-target)))
 
         layer         (layer/mk-perspective-layer
                         width height fov pos {:clear false :clear-color 0xff0000})
@@ -261,12 +245,11 @@
 
 (defn game-start []
   (let [ch (mk-time-chan)]
-    (math/init! cljs-math)
     (comment listen/on-keys scr got-key!)
 
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           [osw osh]       [1024 1024]
-          fb              (mk-feedback osw osh effects/basic-shader)
+          fb              (fb/mk-feedback osw osh basic-shader/basic-shader)
           gui             (js/dat.GUI.)
           game-layer      (mk-game-layer width height) 
           off-scr-layer   (mk-offscreen-layer osw osh 45 (array 0 0 100))
@@ -280,7 +263,7 @@
 
       (.add gui opts "time-scale" 0.0001 3)
 
-      (set-renderer! renderer)
+      (renderable/set-renderer! renderer)
 
       (with-scene (get-scene game-layer)
                   (add cube-plane)
@@ -296,13 +279,13 @@
                (obj/update-objs! (* (aget opts "time-scale") dx))
                (effect/update cube-geo [dx time])
 
-               (render cube-geo)
+               (renderable/render cube-geo)
 
-               (render game-layer)
+               (renderable/render game-layer)
 
                (fb/render-layer fb (:layer off-scr-layer))
                (set-map! plane (fb/get-buffer fb))
-               (render fb)
+               (renderable/render fb)
 
                (recur
                  (<! ch) (fb/flip fb))))))

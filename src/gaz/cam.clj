@@ -1,6 +1,6 @@
 (ns gaz.cam
   (:require 
-    [gaz.math  :as math ]))
+    [math.vec3  :as math ]))
 
 (defrecord Cam [pos lookat vel])
 

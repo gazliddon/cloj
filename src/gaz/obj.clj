@@ -1,7 +1,7 @@
 (ns gaz.obj
   (:require
     [cloj.jsutil     :as jsu]
-    [gaz.math  :as math ]))
+    [math.vec3  :as math ]))
 
 (defprotocol UpdateObject
   (update [_ tm])

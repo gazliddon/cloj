@@ -1,6 +1,10 @@
-(ns gaz.math)
+(ns math.vec3
+  (:require
+    [math.constants]
+    ))
 
-(defn init! [v])
+(def abs Math/abs)
+(def sqrt Math/sqrt)
 
 (defn mk-vec
   ([x y z] (array x y z))
@@ -73,7 +77,6 @@
 (defn mk-copy [src]
   (copy! (array ) src))
 
-
 (def zero   (array 0 0 0))
 (def x-axis (array 1 0 0))
 (def y-axis (array 0 1 0))
@@ -81,7 +84,7 @@
 
 (defn neg [v0] (sub zero v0))
 (defn length-squared  [v] (dot v v))
-(defn length  [v] (Math/sqrt ( length-squared v)))
+(defn length  [v] (sqrt ( length-squared v)))
 (defn unit-vector [v] (div-scalar (length v) v))
 
 ;; Clamping stuff
@@ -96,7 +99,6 @@
          (clamp-s z min-z max-z)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(def epsilon 2.220460492503130808472633361816E-16)
 (defn is-equal [a b] (<= (abs (- a b) epsilon)))
 (defn is-zero [v] (is-equal 0 v))
 

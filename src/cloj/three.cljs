@@ -66,6 +66,13 @@
   (let [n (jsu/random-int (count all-mats))]
     (all-mats n)) )
 
+(defn mk-geo-group [geos]
+  (let [grp (js/THREE.Object3D.)]
+    (doseq [g geos]
+      (aset g "matrixAutoUpdate" false)
+      (.updateMatrix g)
+      (.addChild grp g))
+    grp))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

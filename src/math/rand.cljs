@@ -1,6 +1,6 @@
-(ns gaz.rand
+(ns math.rand
   (:require
-    [gaz.math  :as math]))
+    [math.vec3  :as math]))
 
 (defn rnd-rng [lo hi] (+ lo (rand (- hi lo))))
 

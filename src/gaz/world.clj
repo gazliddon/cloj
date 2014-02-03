@@ -1,5 +1,5 @@
 (ns gaz.world
-  (:require [gaz.math  :as math ]))
+  (:require [math.vec3  :as math ]))
 
 (defn- mk-pos [x y z] (math/vec3 x y z))
 

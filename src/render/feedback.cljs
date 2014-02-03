@@ -1,4 +1,4 @@
-(ns gaz.feedback
+(ns render.feedback
 
   (:require-macros
     [gaz.macros              :refer [with-scene ]]
@@ -7,15 +7,15 @@
   (:require
     [clojure.string :as string]
     [cloj.jsutil       :as jsu]
-    [render.renderable    :refer [RenderableProto render]]
+    
     [gaz.layerproto    :refer [LayerProto add]]
-
     [gaz.layer         :as layer ]
 
-    [gaz.math          :as math]
+    [math.vec3          :as math]
     [gaz.three         :refer [set-pos!]]
+    
     [render.rendertarget  :as rt ]
-
+    [render.renderable    :refer [RenderableProto render]]
     [render.shader     :as shader]
 
     [ui.editable       :as editable]
@@ -33,7 +33,6 @@
 
 (defrecord FeedbackTarget [shader layer front-render-target back-render-target temp-render-target]
 
-
   editable/UIEditable
 
   (add-to-dat [_ dat]
@@ -49,7 +48,6 @@
       (with-rt
         (:render-target temp-render-target)
         (render layer))
-
       )
     ))
 
@@ -83,11 +81,6 @@
                  material))
 
     (FeedbackTarget. shader layer front-rt back-rt temp-rt)))
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ends
