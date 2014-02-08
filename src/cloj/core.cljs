@@ -1,16 +1,16 @@
 (ns cloj.core
 
   (:require
-    
+    [goog.dom                 :as dom]
+    [cljs.core.async          :as ca :refer [chan <! >! put! close!]]
+
     [content.basicshader      :as basic-shader]
     [content.effect           :as effect] 
     [content.cubegeo          :as cubegeo]
 
     [ui.editable              :as editable] 
 
-    [goog.dom                 :as dom]
-    [cljs.core.async          :as ca :refer [chan <! >! put!]]
-    [cloj.jsutil              :as jsu]
+    [cloj.jsutil              :as jsu :refer [log]]
     [cloj.timechan            :refer [mk-time-chan]]
     
     [render.feedback          :as fb ]
@@ -34,12 +34,15 @@
     [gaz.control              :as control]
 
     [gaz.listen               :as listen]
+
+    [objs.booter :as booter]
+
     
     )
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
     [render.rendertarget      :refer [with-rt]]
-    [gaz.macros               :refer [with-scene ]])
+    [gaz.macros               :refer [with-scene aloop]])
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -248,7 +251,6 @@
   (let [ch (mk-time-chan)]
     (comment listen/on-keys scr got-key!)
 
-    (listen/test-it scr)
 
     (let [{:keys [width height renderer]} (mk-full-scr-renderer)
           [osw osh]       [1024 1024]
@@ -289,14 +291,8 @@
                (set-map! plane (fb/get-buffer fb))
                (renderable/render fb)
 
-               (recur
-                 (<! ch) (fb/flip fb))))))
+               (recur (<! ch) (fb/flip fb))
+               ))))
 
 (game-start)
-
-(defprotocol Editable
-  (populate-gui [this gui])
-  )
-
-
-
+(booter/boot)

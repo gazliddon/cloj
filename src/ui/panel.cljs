@@ -40,7 +40,7 @@
         y (range height-segments)]
     (mk-panel-mesh (* x-step x) (* y-step y) (mat x y))))
 
-(def mk-panel-grp (comp three/mk-geo-group mk-panel-meshes))
+(defn mk-panel-grp [] (comp three/mk-geo-group mk-panel-meshes))
 
 (defn mk-panel-obj [pos]
   (three/set-pos! (mk-panel-grp) pos))

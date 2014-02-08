@@ -36,7 +36,6 @@
 
 (defn mk-jso-from-attrs [mp]
   (let [ret (js-obj)]
-    (jsu/log (str mp))
     (doseq [[k v] mp] 
       (aset ret (name k) @(:value v)))
     ret))

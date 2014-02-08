@@ -31,18 +31,53 @@
   [e f ]
   (let [ kud (listen-keys e)]
     (go (while true
-          (let [ k (ca/<! kud)]
+          (if-let [ k (ca/<! kud)]
             (f k))))))
 
 
 
 (defn get-all-key-events [dom-element]
-   (merge-listen dom-element "keydown" "keyup"))
+  (merge-listen dom-element "keydown" "keyup"))
 
-(defn test-it [dom-element]
-  (let [in-chan (get-all-key-events dom-element)]
-    (go
-      (while true
-        (let [key-in (ca/<! in-chan)]
-          (jsu/log key-in)
-          )))))
+
+(defn topicfn [v]
+  (let [typ (aget v "type")]
+    (if (= typ "keyup")
+      :yes
+      :no)
+    )
+  )
+
+
+
+
+(defn make-keys-pub [dom-element]
+  (let [in-chan (get-all-key-events dom-element) ]
+    (ca/pub in-chan topicfn)
+    ))
+
+; (defn test-it [dom-element]
+;   (let [pub (make-keys-pub dom-element)
+;         ch (ca/chan)
+;         sub (ca/sub pub :yes ch)]
+
+;     (go
+;       (while true
+;         (let [v (ca/<! ch)]
+;           (jsu/log v)
+;           )))))
+
+; (defn test [out-c]
+;   (go-loop [[x y] [0 0]]
+;            (if-let [k (ca/<! key-chan) ]
+;              (condp = k
+;                :up      (recur [x (inc y)])
+;                :down    (recur [x (dec y)])
+;                :left    (recur [(dec x) y])
+;                :right   (recur [(inc x) y])
+;                :frame   (let [[x y] (clamp [x y])]
+;                           (ca/put! out-c [x y])
+;                           (recur [x y])) 
+;                ))))
+             
+(defn test-it [])

@@ -11,9 +11,9 @@ if [ "$?" -eq 1 ] ; then
     echo "No Session found.  Creating and configuring."
     tmux new-session -d -s $PROJECT_NAME
     tmux neww -n VIM "vim -f"
-    tmux splitw -p 10 "lein cljsbuild auto opt"
+    tmux splitw -p 10 "lein cljsbuild auto dev"
     tmux neww -n Server "http-server ."
-    tmux neww -n IRC ir
+    tmux neww -n IRC irsii
     tmux selectw -t 2
     tmux selectp -t 0
 else
