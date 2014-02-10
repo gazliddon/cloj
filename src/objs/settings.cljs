@@ -1,33 +1,49 @@
 (ns objs.settings
   (:require-macros
-    [cljs.core.async.macros    :refer [go go-loop]]
-    [lt.macros                 :refer [behavior]])
+    [cljs.core.async.macros     :refer [go go-loop]]
+    [lt.macros                  :refer [behavior]])
   
   (:require
-    [cljs.core.async            :as ca :refer [chan <! >! close!]]
-    [file.loader                :as loader ]
-    [cloj.jsutil                :as jsu :refer [log]]
-    [lt.object                  :as object]))
+    [cljs.reader                  :as reader]
+    [cljs.core.async              :as ca :refer [chan <! >! close!]]
+    [file.loader                  :as loader ]
+    [cloj.jsutil                  :as jsu :refer [log]]
+    [lt.object                    :as object]
+    ))
 
-(behavior ::load-behaviors
-          :triggers #{:behaviors.load}
+(defn safe-read [s file]
+  (when s
+    (try
+      (reader/read-string s)
+      (catch js/global.Error e
+        (log (str "Invalid settings file: " file "\n" e))
+        nil)
+      (catch js/Error e
+        (log (str "Invalid settings file: " file "\n" e))
+        nil))))
+
+(behavior ::load-settings
+          :triggers #{:settings.load}
           :reaction (fn [this file]
-                      (log "Been told to load " file)
-                      (go
-                        (object/raise this :behaviors.preload file)
-                        (let [load-chan (loader/load file)
-                              txt (<! load-chan)]
-                          (log "Yeah here we are! having loaded")
-                          (object/raise this :behaviors.parse txt)
-                          (log "and we're back from asking to parse")
-                          (close! load-chan)
+                      (object/raise this :file.load file)))
+
+(behavior ::settings-loaded
+          :triggers #{file.loaded}
+          :reaction (fn [this txt file]
+                      (log "loaded settings")
+                      (object/raise this :settings.parse txt file))
+          )
+
+(behavior ::parse-settings
+          :triggers #{:settings.parse}
+          :reaction (fn [this txt file]
+                      (let [forms (safe-read txt file)]
+                      (log "parsed forms")
+                        (when forms
+                          (object/raise this :settings.parsed)  
                           ))))
 
-(behavior ::parse-behaviors
-          :triggers #{:behaviors.parse}
-          :reaction (fn [this txt]
-                      (log "Been asked to parse")
-                      (log txt)
-                      (object/raise this :behaviors.loaded)))
+(object/object* ::settings
+               :tags #{:settings :loader})
 
-
+(def settings (object/create ::settings))

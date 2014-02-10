@@ -4,37 +4,36 @@
 (ns objs.booter
   (:require-macros
     [cljs.core.async.macros     :refer [go go-loop]]
-    [lt.macros                  :refer [behavior]])
+    [lt.macros                  :refer [behavior]]
+    )
   
   (:require
-    [cloj.jsutil                     :as jsu :refer [log]]
-    [objs.app                        :as app]
-    [objs.settings                   :as settings]
-    [lt.object                       :as object]))
+    [cloj.jsutil                      :as jsu :refer [log]]
+    [objs.app                         :as app]
+    [objs.loader                      :as loader]
+    [objs.settings                    :as settings]
+    [lt.object                        :as object]))
 
 (behavior ::begin-boot
           :triggers #{:boot}
           :reaction (fn [this]
-                      (log "got my boot msg!")
-                      (object/raise this :behaviors.load "settings.clj")))
+                      (log "beggining boot")
+                      (object/raise this :file.load "settings.clj")))
 
-(behavior ::complete-boot
-          :triggers #{:behaviors.loaded}
-          :reaction (fn [this]
-                      (log "all loaded!")
-                      (object/raise app/app :init)))
+(behavior ::settings-loaded
+          :triggers #{:file.onload}
+          :reaction (fn [this txt file]
+                      (log "settings loaded in boot")
+                      (object/raise this :settings.parse txt file)
+                      (object/raise app/app :init!)))
 
-(object/object* ::booter
-                :tags #{:booter})
-
-(def booter (object/create ::booter))
+(def booter (object/create (object/object* ::booter :tags #{:booter })))
 
 (object/tag-behaviors
   :booter [::begin-boot
-           ::complete-boot
-           :objs.settings/load-behaviors
-           :objs.settings/parse-behaviors
-           ])
+           ::settings-loaded
+           :objs.settings/parse-settings
+           :objs.loader/loader ])
 
 (defn boot []
   (do
