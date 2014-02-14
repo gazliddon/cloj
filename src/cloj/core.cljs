@@ -35,9 +35,9 @@
 
     [gaz.listen               :as listen]
 
-    [objs.booter :as booter]
+    [lt.object :as object]
 
-    
+    [objs.booter :as booter]
     )
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
@@ -294,5 +294,8 @@
                (recur (<! ch) (fb/flip fb))
                ))))
 
-(game-start)
-(booter/boot)
+(do
+  ;; Bodge in a function to call after boot
+  (object/merge! booter/booter {:post-boot-fn game-start})
+  (object/raise booter/booter :boot))
+  

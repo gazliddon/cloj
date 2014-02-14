@@ -12,9 +12,9 @@
 (behavior ::loader
           :triggers #{:file.load}
           :reaction (fn [this file]
-                      (go
-                        (let [load-chan (loader/load file)
-                              txt (<! load-chan)]
-                          (object/raise this :file.onload txt file)
-                          (close! load-chan)))
+                      (let [load-chan (loader/load file)]
+                        (go
+                          (let [ txt (<! load-chan)]
+                            (object/raise this :file.onload txt file)
+                            (close! load-chan))))
                       ))

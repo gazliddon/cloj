@@ -14,18 +14,22 @@
     [objs.settings                    :as settings]
     [lt.object                        :as object]))
 
+
 (behavior ::begin-boot
           :triggers #{:boot}
           :reaction (fn [this]
-                      (log "beggining boot")
                       (object/raise this :file.load "settings.clj")))
 
 (behavior ::settings-loaded
           :triggers #{:file.onload}
           :reaction (fn [this txt file]
-                      (log "settings loaded in boot")
                       (object/raise this :settings.parse txt file)
-                      (object/raise app/app :init!)))
+                      (log "behaviors in - booting app")
+                      (object/raise app/app :init!)
+                      ;; TODO Bodge should be removed
+                      (when (:post-boot-fn @this)
+                        ( (:post-boot-fn @this)))
+                      ))
 
 (def booter (object/create (object/object* ::booter :tags #{:booter })))
 
@@ -35,9 +39,4 @@
            :objs.settings/parse-settings
            :objs.loader/loader ])
 
-(defn boot []
-  (do
-    (log "about to booter")
-    (object/raise booter :boot)
-    (log "booter off and running")))
 

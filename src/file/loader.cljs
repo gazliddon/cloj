@@ -18,10 +18,7 @@
     ch))
 
 (defn load [file]
-  (go
-    (let [load-chan (GET file)
-          txt (<! load-chan)]
-      (close! load-chan))))
+ (GET file) )
 
 
 

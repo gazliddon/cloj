@@ -11,7 +11,13 @@
 
 (defn log [& rst]
   (doseq [t rst]
-      (.log js/console t)))
+      (.log js/console t))
+  rst)
+
+(defn strlog [& rst]
+  (doseq [t rst]
+      (.log js/console (str t)))
+  rst)
 
 (defn strkey
   "Helper fn that converts keywords into strings"

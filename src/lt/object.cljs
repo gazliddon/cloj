@@ -16,7 +16,6 @@
 (def tags (atom {}))
 (def ^{:dynamic true} *behavior-meta* nil)
 
-
 (defn add [obj]
   (swap! object-defs assoc (::type obj) obj))
 
@@ -357,7 +356,6 @@
                          (remove-tags this (if (coll? t)
                                              t
                                              [t])))))
-
 (behavior ::shadow-tag
            :desc "App: Shadow a tag on an object"
            :params [{:label "tag to shadow"}
@@ -378,10 +376,4 @@
                        (when js/lt.objs.console
                          (js/lt.objs.console.log (str beh " took " time "ms")))))
 
-(comment defn doit [in-ch f]
-  (let [ret-ch (chan 1)]
-    (go
-      (let [gotit (<! in-ch)]
-        (>! ret-ch (f gotit)) 
-        (close! ret-ch)))
-    ret-ch))
+

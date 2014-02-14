@@ -1,14 +1,25 @@
-;; Default behaviours
 {
  :+
- {:app        [objs.app/init! ]
+ {:app       [:objs.app/init! ]
 
-  :settings  [objs.settings/load-settings
-              objs.settings/parse-settings]
+  :loader    [:objs.loader/load]
 
-  :ogl-window [objs.ogl/create!]
+  :settings  [:objs.settings/load-settings
+              :objs.settings/settings-loaded
+              :objs.settings/parse-settings]
+
+  :ogl       [:objs.ogl/create!
+              :objs.ogl/resize!]
+
+  :interpolator [:objs.interpolator/init!
+                 :objs.interpolator/move!
+                 :objs.interpolator/set!
+                 :objs.interpolator/update!
+                 :objs.interpolator/get
+                 ]
   }
  :-
- {}
- 
+ {
+  }
+
  }
