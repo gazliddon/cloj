@@ -5,8 +5,6 @@
     [cljs.core.async           :as ca :refer [chan <! >! put! close!]]
 
     [content.basicshader       :as basic-shader]
-    [content.effect            :as effect]
-
     [ui.editable               :as editable]
 
     [cloj.jsutil               :refer [log]]
@@ -137,7 +135,6 @@
         game-layer      (mk-game-layer width height) 
         off-scr-layer   (mk-offscreen-layer osw osh 45 (array 0 0 100))
         plane           (mk-feedback-plane (fb/get-buffer fb) 10 10)
-        opts            (js-obj "time-scale" 1.0 )
         cube-geo        (cubegeo/mk-cube-geo (get-scene off-scr-layer) 80)]
 
     (renderable/set-renderer! renderer)
@@ -150,7 +147,6 @@
                          :game-layer game-layer
                          :off-scr-layer off-scr-layer
                          :plane plane
-                         :opts opts
                          :cube-geo cube-geo })))
 
 (defn main-app-update! [this tm]
@@ -168,8 +164,7 @@
 
     (renderable/render game-layer)
     (fb/render-layer fb (:layer off-scr-layer))
-    (renderable/render fb)
-    ))
+    (renderable/render fb)))
 
 (object* ::mainapp
          :tags #{:mainapp}
