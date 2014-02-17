@@ -62,6 +62,8 @@
    (js/THREE.MeshPhongMaterial. (default-mat-settings 0xd0920a))
    ])
 
+(defn set-map! [obj mp] (aset (aget obj "material") "map" mp))
+
 (defn rnd-material []
   (let [n (jsu/random-int (count all-mats))]
     (all-mats n)) )

@@ -20,10 +20,7 @@
     [gaz.layer                :as layer ]
     [gaz.layerproto           :refer [LayerProto get-scene get-cam]]
 
-    [gaz.three                :refer [add set-pos!
-                                      rnd-material
-                                      set-rot!
-                                      set-posrot! ]]
+    [gaz.three                :refer [add set-pos! set-map!]]
 
     [gaz.keys                 :as gkeys]
 
@@ -161,8 +158,6 @@
                 fb-mat)]
 
     plane))
-
-(defn set-map! [obj mp] (aset (aget obj "material") "map" mp))
 
 (defn mk-effect-quad [effect pos]
   (let [plane (mk-feedback-plane (effect/get-output effect) 2 2)]
