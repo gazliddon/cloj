@@ -2,12 +2,13 @@
   (:require-macros
     [cljs.core.async.macros     :refer [go go-loop]]
     [lt.macros                  :refer [behavior]])
-  
+
   (:require
-    [cloj.jsutil          :as jsu :refer [log strlog]]
-    [lt.object            :as object]
-    [math.vec3            :as v3]
-    [objs.cam             :as cam]))
+    [gaz.three             :as three]
+    [lt.object             :as object :refer [raise create object* merge!]]
+    [cloj.jsutil           :as jsu :refer [log strlog]]
+    [math.vec3             :as v3]
+    [objs.cam              :as cam]))
 
 ;; need a scene
 (defn mk-cube []
@@ -29,15 +30,15 @@
           :reaction (fn [this t]
                       (let [num-cubes 100
                             scene (js/THREE.Scene.)
-                            cs    (mk-cubes num-cubes)]
-                        (object/merge! this {:scene js/THREE.Scene.
-                                             :cubes mk-cubes
-                                             :start-time t
-                                             :time-scale 1.0
-                                             :clear-opts default-opts})
+                            cubes    (mk-cubes num-cubes)]
+                        (merge! this {:scene js/THREE.Scene.
+                                      :cubes cubes
+                                      :start-time t
+                                      :time-scale 1.0
+                                      :clear-opts default-opts})
                         (doseq [cube cubes] (.add scene cube))
                         (.add scene (mk-light))
-                        (object/raise this :update! t))
+                        (raise this :update! t))
                       ))
 
 (behavior ::update

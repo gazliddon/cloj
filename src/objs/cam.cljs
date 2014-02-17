@@ -25,7 +25,7 @@
 (behavior ::update!
           :triggers #{:update!}
           :reaction (fn [this t]
-                      (let [i (:interpolator @this)
+                      (let [i       (:interpolator @this)
                             new-pos (object/raise i :get t)]
                        (object/merge! this {:pos new-pos}))))
 

@@ -1,5 +1,4 @@
 (ns render.feedback
-
   (:require-macros
     [gaz.macros              :refer [with-scene ]]
     [render.rendertarget :refer [with-rt]])

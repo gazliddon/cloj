@@ -10,6 +10,7 @@
 (def default-opts {:clear false
                    :clear-color 0xff00ff
                    :alpha 1})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Layer proto and game and hud layers
 (defrecord Layer [scene cam opts]
@@ -47,16 +48,14 @@
 
 (defn mk-ortho-layer
   [width height  & [opts]]
-  (mk-layer
-    (js/THREE.Scene.)
-    (mk-orho-cam width height)
-    (or opts default-opts)))
+  (mk-layer (js/THREE.Scene.)
+            (mk-orho-cam width height)
+            (or opts default-opts)))
 
 (defn mk-perspective-layer
   [width height fov pos & [opts]]
-  (mk-layer
-    (js/THREE.Scene.)
-    (mk-perspective-cam width height fov pos)
-    (or opts default-opts)))
+  (mk-layer (js/THREE.Scene.)
+            (mk-perspective-cam width height fov pos)
+            (or opts default-opts)))
 
 ;; ends
