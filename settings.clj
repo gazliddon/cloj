@@ -20,6 +20,12 @@
 
   :mainapp     [:cloj.core/update!
                 :cloj.core/render]
+  
+  :feedback    [:objs.feedback/flip!
+                :objs.feedback/set-rt!
+                :objs.feedback/get-rt
+                :objs.feedback/render-with-rt
+                :objs.feedback/set-effect!]
 
   :iterator    [:objs.iterator/set-index!
                 :objs.iterator/next!
@@ -31,6 +37,12 @@
   :geo         [:objs.geo/add-to-scene!
                 :objs.geo/remove-from-scene!
                 :objs.geo/update!]
+
+  :layer       [:objs.layer/add!
+                :objs.layer/set-clear-color!
+                :objs.layer/render
+                :objs.layer/get-rt ]
+
   }
 
  :-

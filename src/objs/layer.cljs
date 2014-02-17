@@ -23,6 +23,11 @@
     (aset rt "generateMipMaps" false)
     rt))
 
+(behavior ::add!
+          :triggers #{:add!}
+          :reaction (fn [this obj]
+                      (.add (:scene @this) obj)))
+
 (behavior ::render
           :triggers #{:render}
           :reaction (fn [this renderer]
@@ -74,6 +79,4 @@
                 :tags #{:layer}
                 :init (fn [this w h]
                         (cam-layer-object! this (mk-orho-cam w h) (array 0 0 1))))
-
-
 
