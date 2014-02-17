@@ -7,8 +7,8 @@
   (:require-macros
     [lt.macros :refer [behavior]]))
 
-(behavior ::update
-          :triggers #{:update}
+(behavior ::update!
+          :triggers #{:update!}
           :reaction (fn [this tm]
                       (let [cur @this]
                         (raise :update (:geo cur) tm))

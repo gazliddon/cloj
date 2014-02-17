@@ -1,77 +1,39 @@
 (ns cloj.core
 
   (:require
-    [goog.dom                 :as dom]
-    [cljs.core.async          :as ca :refer [chan <! >! put! close!]]
+    [goog.dom                  :as dom]
+    [cljs.core.async           :as ca :refer [chan <! >! put! close!]]
 
-    [content.basicshader      :as basic-shader]
-    [content.effect           :as effect] 
-    [content.cubegeo          :as cubegeo]
+    [content.basicshader       :as basic-shader]
+    [content.effect            :as effect]
 
-    [ui.editable              :as editable] 
+    [ui.editable               :as editable]
 
-    [cloj.jsutil              :as jsu :refer [log]]
-    [cloj.timechan            :refer [mk-time-chan]]
+    [cloj.jsutil               :refer [log]]
+    [cloj.timechan             :refer [mk-time-chan]]
 
-    [render.feedback          :as fb ]
-    [render.rendertarget      :as rt ]
-    [render.renderable        :as renderable ]
+    [render.feedback           :as fb ]
+    [render.rendertarget       :as rt ]
+    [render.renderable         :as renderable ]
 
-    [gaz.layer                :as layer ]
-    [gaz.layerproto           :refer [LayerProto get-scene get-cam]]
+    [gaz.layer                 :as layer ]
+    [gaz.layerproto            :refer [LayerProto get-scene get-cam]]
+    [gaz.three                 :refer [add set-pos! set-map!]]
 
-    [gaz.three                :refer [add set-pos! set-map!]]
-
-    [gaz.keys                 :as gkeys]
-
-    [math.vec3                :as v3]
-    [math.rand                :refer [rnd-v3]]
-    [gaz.obj                  :as obj ]
-    [gaz.control              :as control]
-
-    [gaz.listen               :as listen]
-
-    [lt.object                  :as object :refer [raise create object* merge!]]
-
-    [objs.booter :as booter]
-    [objs.cubegeo :as cubegeo2]
+    [lt.object                 :as object :refer [raise create object* merge!]]
+    [objs.booter               :as booter]
+    [objs.cubegeo              :as cubegeo]
     )
 
   (:require-macros
-    [cljs.core.async.macros   :refer [go go-loop]]
-    [lt.macros                  :refer [behavior]]
+    [cljs.core.async.macros   :refer [go-loop]]
+    [lt.macros                :refer [behavior]]
     [render.rendertarget      :refer [with-rt]]
-    [gaz.macros               :refer [with-scene aloop]])
+    [gaz.macros               :refer [with-scene]])
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def scr (dom/getElement "scr"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Take an action on a key
-;; Should really just xform it into a platform neutral message and send on
-(defn got-key! [e]
-  (let [etype  (.-type e)
-        keyfun (partial gkeys/new-state! (char (.-keyCode e)))
-        reset gkeys/all-reset!]
-    (condp = etype
-      "keydown"   (keyfun true)
-      "keyup"     (keyfun false)
-      "focuslost" (reset))))
-
-(defn xform-key-event
-  "Transform a web event into a key one"
-  [ev]
-  (let [etype   (.-type ev)
-        keycode (.-keycode ev)]
-    (condp = etype
-      "keydown"   {:event :down :key keycode}
-      "keyup"     {:event :up   :key keycode}
-      "focuslost" {:event :focuslost}
-      {})))
-
-(defn setup-key-listener [elem channel]
-  (listen/on-keys elem (comp (partial put! channel) xform-key-event)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
@@ -156,12 +118,6 @@
         plane (js/THREE.Mesh.
                 (js/THREE.PlaneGeometry. sx sy 1 1)
                 fb-mat)]
-
-    plane))
-
-(defn mk-effect-quad [effect pos]
-  (let [plane (mk-feedback-plane (effect/get-output effect) 2 2)]
-    (set-pos! plane pos)
     plane))
 
 (defn game-start []
@@ -182,13 +138,10 @@
         off-scr-layer   (mk-offscreen-layer osw osh 45 (array 0 0 100))
         plane           (mk-feedback-plane (fb/get-buffer fb) 10 10)
         opts            (js-obj "time-scale" 1.0 )
-        cube-geo        (cubegeo/mk-cube-geo)
-        cube-plane      (mk-effect-quad cube-geo (array 0 0 1))
-        cube-geo-2      (cubegeo2/mk-cube-geo (get-scene off-scr-layer) 80)]
+        cube-geo        (cubegeo/mk-cube-geo (get-scene off-scr-layer) 80)]
 
     (renderable/set-renderer! renderer)
     (with-scene (get-scene game-layer)
-                (add cube-plane)
                 (add plane))
 
     (object/merge! this {:osw osw
@@ -198,34 +151,25 @@
                          :off-scr-layer off-scr-layer
                          :plane plane
                          :opts opts
-                         :cube-geo cube-geo
-                         :cube-plane cube-plane
-                         :cube-geo-2 cube-geo-2 })))
+                         :cube-geo cube-geo })))
 
 (defn main-app-update! [this tm]
-  (let [{:keys [cube-geo cube-geo-2]} @this ]
-    (raise cube-geo-2 :update! tm)
-    (effect/update cube-geo tm)))
+  (let [{:keys [cube-geo fb plane]} @this ]
+    (raise cube-geo :update! tm)
+    (set-map! plane (fb/get-buffer fb))
+    (merge! this {:fb (fb/flip fb)})))
 
 (defn main-app-render [this]
   (let [cur @this
-        {:keys [cube-geo
-                game-layer
+        {:keys [ game-layer
                 fb
-                plane
                 off-scr-layer
-                ]} cur
-        fb-next (fb/flip fb)]
+                ]} cur ]
 
-    (renderable/render cube-geo)
     (renderable/render game-layer)
-
     (fb/render-layer fb (:layer off-scr-layer))
-    (set-map! plane (fb/get-buffer fb))
     (renderable/render fb)
-
-    (merge! this {:fb fb-next}))
-  )
+    ))
 
 (object* ::mainapp
          :tags #{:mainapp}
