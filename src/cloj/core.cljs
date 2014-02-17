@@ -96,7 +96,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn mk-game-layer [width height]
-  (let [game-layer (layer/mk-perspective-layer 
+  (let [game-layer (layer/mk-perspective-layer
                      width height 25 (array 0 0 18)
                      {:name "game" :clear true :clear-color 0x0000ff})]
     (with-scene
@@ -132,7 +132,7 @@
   (let [{:keys [width height renderer]} (mk-full-scr-renderer)
         [osw osh]       [1024 1024]
         fb              (fb/mk-feedback osw osh basic-shader/basic-shader)
-        game-layer      (mk-game-layer width height) 
+        game-layer      (mk-game-layer width height)
         off-scr-layer   (mk-offscreen-layer osw osh 45 (array 0 0 100))
         plane           (mk-feedback-plane (fb/get-buffer fb) 10 10)
         cube-geo        (cubegeo/mk-cube-geo (get-scene off-scr-layer) 80)]
@@ -185,4 +185,4 @@
   ;; Bodge in a function to call after boot
   (merge! booter/booter {:post-boot-fn game-start})
   (raise booter/booter :boot))
-  
+
