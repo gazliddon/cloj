@@ -39,6 +39,7 @@
     [objs.booter :as booter]
     [objs.cubegeo :as cubegeo2]
     )
+
   (:require-macros
     [cljs.core.async.macros   :refer [go go-loop]]
     [lt.macros                  :refer [behavior]]
@@ -47,15 +48,6 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn func-on-vals [mp func & kyz]
-  (reduce (fn [m v] (assoc m v (func (mp v)))) mp kyz))
-
-(def get-text
-  (comp #(.-textContent %) dom/getElement))
-
-(defn get-source [shad]
-  (func-on-vals shad get-text "vertexShader" "fragmentShader"))
-
 (def scr (dom/getElement "scr"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,74 +77,7 @@
   (listen/on-keys elem (comp (partial put! channel) xform-key-event)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn cam-func
-  "update the camera from the keys!"
-  [ cam]
-  (comment let [nv (control/keys-to-vel (:vel cam) (gkeys/filter-keys :state)) ]
-           (cam/update (assoc cam :vel nv))))
-
-
-(defrecord Cube2Object [pos start-time msh]
-  obj/UpdateObject
-  (update [_ tm]
-
-    )
-
-  (is-dead? [_] false)
-  )
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(def cube-geo (js/THREE.CubeGeometry. 1 1 1 1 1 1))
-
-(defrecord CubeObject [pos vel rot rot-vel msh]
-  obj/UpdateObject
-
-  (update [_ tm]
-    (let [scaled-rot-vel (v3/mul-scalar tm rot-vel)
-          new-vel  (obj/get-oscillate-vel pos vel v3/zero 0.0005)
-          scaled-new-vel (v3/mul-scalar tm new-vel)  ]
-
-      (v3/add! pos scaled-new-vel)
-      (v3/add! rot scaled-rot-vel)
-      (set-posrot! msh pos rot)
-      (CubeObject. pos new-vel rot rot-vel msh))
-    )
-
-  (is-dead? [_] false))
-
-(defn mk-cube [pos material]
-  (let [msh (js/THREE.Mesh. (js/THREE.CubeGeometry. 1 1 1 1 1 1) material )]
-    (set-pos! msh pos)
-    msh))
-
-(defn mk-cube-object [material pos vel rot rot-vel ]
-  (let [cube (mk-cube pos material)]
-    (add cube)
-    (CubeObject. pos vel rot rot-vel cube)))
-
-(defn mk-random-cube-object []
-  (mk-cube-object
-    (rnd-material)
-    (rnd-v3 [-8 -8 -2] [8 8 2])
-    (rnd-v3 [-0.05 -0.05 0.5] [0.05 0.05 -0.5])
-    (rnd-v3 [-180 -180 -180] [180 180 180])
-    (rnd-v3 [-0.05 -0.05 -0.05] [0.005 0.005 0.005])))
-
-(defn add-rnd-cube-obj! []
-  (obj/add-obj! (mk-random-cube-object)))
-
-(defn mk-one-cube [material]
-  (let [cb (mk-random-cube-object)
-        msh (:msh cb)]
-    (aset (:msh cb) "material" material)
-    (v3/mul-scalar! 0.01 (:pos cb) )
-    (v3/mul-scalar! 0.1 (:rot-vel cb))
-    cb) )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; start the app
-
 (defn mk-full-scr-renderer []
   (let [render-opts (js-obj
                       "antialias" false
@@ -249,13 +174,10 @@
         app (object/create ::mainapp)]
 
     (go-loop [tick 0]
-
              (let [tm (<! ch)]
                (object/raise app :update! tm)
                (object/raise app :render))
-
-             (recur (inc tick)))
-    ))
+             (recur (inc tick)))))
 
 (defn add-mainapp-vars! [this]
   (let [{:keys [width height renderer]} (mk-full-scr-renderer)
@@ -311,10 +233,10 @@
   )
 
 (object* ::mainapp
-                :tags #{:mainapp}
-                :init (fn [this]
-                        (add-mainapp-vars! this)
-                        ))
+         :tags #{:mainapp}
+         :init (fn [this]
+                 (add-mainapp-vars! this)))
+
 (behavior ::update!
           :triggers #{:update!}
           :reaction (fn [this tm]
