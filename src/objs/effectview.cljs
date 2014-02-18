@@ -12,11 +12,11 @@
 ;; need a scene
 
 (behavior ::update!
-          :trigger #{:update! }
+          :triggers #{:update! }
           )
 
 (behavior ::render
-          :trigger #{:render }
+          :triggers #{:render }
           :reaction (fn [this renderer])
           )
 
@@ -29,17 +29,17 @@
                 )
 
 (behavior ::add
-          :trigger #{:add!}
+          :triggers #{:add!}
           :reaction (fn [this effect]
                       (object/merge!
                         this (:effects (conj (:effects @this) effect)))))
 
 (behavior ::info
-          :trigger #{:info}
+          :triggers #{:info}
           :reaction (fn [this]
                       (count (:effects @this))))
 
 (behavior ::remove
-          :trigger #{:remove!}
+          :triggers #{:remove!}
           :reaction (fn [this effect]))
 
