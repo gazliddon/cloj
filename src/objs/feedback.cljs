@@ -1,6 +1,5 @@
 (ns objs.feedback
   (:require-macros
-    [cljs.core.async.macros     :refer [go go-loop]]
     [lt.macros                  :refer [behavior]])
 
   (:require
@@ -22,7 +21,7 @@
     rt-rt))
 
 (behavior ::flip!
-          :trigger #{:flip!}
+          :triggers #{:flip!}
           :reaction (fn [this]
                       (let [{:keys [last-rt layer]} @this
                             this-rt (raise layer :get-rt)]
@@ -38,7 +37,7 @@
           :reaction (fn [this] (:last-rt @this)))
 
 (behavior ::render-with-rt
-          :trigger #{:render}
+          :triggers #{:render}
           :reaction (fn [this rt [dt t]]
                       (let [{:keys [shader plane last-rt layer]} @this
                             material (:material shader)
@@ -50,11 +49,12 @@
                           (aset "lastScreen" last-rt)
                           (aset "thisSceeen" this-rt)
                           (aset "inputScree" rt))
+
                         (raise layer :render)
                         )))
 
 (behavior ::set-effect!
-          :trigger #{:set-effect!}
+          :triggers #{:set-effect!}
           :reaction (fn [this effect]
                       (let [layer    (:layer @this)
                             shader   (shader/mk-material effect)
