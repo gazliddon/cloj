@@ -10,7 +10,7 @@
     (raise this :iterator.set-index! (fun index))))
 
 (behavior ::get-index
-          :trigger #{:iterator.get-index}
+          :triggers #{:iterator.get-index}
           :reaction (fn [this]
                       (let [{:keys [index col]} @this
                             amount    (raise col :iterable.get-count)
@@ -18,24 +18,24 @@
                         new-index)))
 
 (behavior ::set-index!
-          :trigger #{:iterator.set-index!}
+          :triggers #{:iterator.set-index!}
           :reaction (fn [this index]
                       (merge! this {:index (raise this :iterator.get-index)})))
 
 (behavior ::next!
-          :trigger #{:iterator.next!}
+          :triggers #{:iterator.next!}
           :reaction  (fn [this] (apply-index! this inc)))
 
 (behavior ::prev!
-          :trigger #{:iterator.prev!}
+          :triggers #{:iterator.prev!}
           :reaction  (fn [this] (apply-index! this dec)))
 
 (behavior ::set-wrap!
-          :trigger #{:iterator.set-wrap!}
+          :triggers #{:iterator.set-wrap!}
           :reaction  (fn [this wrap?] (merge! this {:wrap? wrap?})))
 
 (behavior ::get-current
-          :trigger #{:iterator.get-current}
+          :triggers #{:iterator.get-current}
           :reaction  (fn [this]
                        (let [index (raise this :iterator.get-index)]
                          (raise this :iterable.get-item index))))
